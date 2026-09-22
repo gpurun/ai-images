@@ -1,13 +1,16 @@
 # =============================================================================
-# Base: Python 3.12 + PyTorch 2.6 (cu128) on CUDA runtime
+# Base: Python 3.12 + PyTorch 2.7.0 (cu128) on CUDA runtime
 # Layer-cache friendly: system packages -> Python -> torch (heavy, rare change)
+# CRITICAL: torch/torchvision/torchaudio must be ABI-compatible (same versions)
 # =============================================================================
 
 ARG BASE_IMAGE=base/cuda-runtime:cu128
 FROM ${BASE_IMAGE}
 
 ARG PYTHON_VERSION=3.12
-ARG TORCH_VERSION=2.6.0
+ARG TORCH_VERSION=2.7.0
+ARG TORCHVISION_VERSION=0.22.0
+ARG TORCHAUDIO_VERSION=2.7.0
 ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cu128
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -34,11 +37,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# --- PyTorch 2.6.x with CUDA 12.8 wheels (official index) ---
+# --- PyTorch 2.7.0 + torchvision 0.22.0 + torchaudio 2.7.0 (ABI-compatible trio) ---
+# Install pinned versions from cu128 index to prevent ABI mismatches
 RUN python -m pip install \
-        torch==${TORCH_VERSION} \
-        torchvision \
-        torchaudio \
+        torch==${TORCH_VERSION}+cu128 \
+        torchvision==${TORCHVISION_VERSION}+cu128 \
+        torchaudio==${TORCHAUDIO_VERSION}+cu128 \
         --index-url ${TORCH_INDEX_URL}
 
 WORKDIR /workspace

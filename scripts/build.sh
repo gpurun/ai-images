@@ -63,6 +63,8 @@ build_image() {
   [[ -n "${CUDA_IMAGE_TAG:-}" ]] && build_args+=(--build-arg "CUDA_IMAGE_TAG=${CUDA_IMAGE_TAG}")
   [[ -n "${PYTHON_VERSION:-}" ]] && build_args+=(--build-arg "PYTHON_VERSION=${PYTHON_VERSION}")
   [[ -n "${TORCH_VERSION:-}" ]] && build_args+=(--build-arg "TORCH_VERSION=${TORCH_VERSION}")
+  [[ -n "${TORCHVISION_VERSION:-}" ]] && build_args+=(--build-arg "TORCHVISION_VERSION=${TORCHVISION_VERSION}")
+  [[ -n "${TORCHAUDIO_VERSION:-}" ]] && build_args+=(--build-arg "TORCHAUDIO_VERSION=${TORCHAUDIO_VERSION}")
   [[ -n "${TORCH_INDEX_URL:-}" ]] && build_args+=(--build-arg "TORCH_INDEX_URL=${TORCH_INDEX_URL}")
   [[ -n "${VLLM_VERSION:-}" ]] && build_args+=(--build-arg "VLLM_VERSION=${VLLM_VERSION}")
   [[ -n "${SGLANG_VERSION:-}" ]] && build_args+=(--build-arg "SGLANG_VERSION=${SGLANG_VERSION}")
