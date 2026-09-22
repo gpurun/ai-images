@@ -125,7 +125,7 @@ build_engines() {
     "engines/comfyui" \
     "engine" \
     "comfyui" \
-    "${COMFYUI_REF}" \
+    "${COMFYUI_TAG}" \
     "${python_ml_image}"
 
   # vLLM engine
@@ -160,10 +160,10 @@ build_products() {
   local diffusers_api_image
   
   if [[ -n "${IMAGE_REGISTRY}" ]]; then
-    comfyui_image="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}"
+    comfyui_image="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_TAG}"
     diffusers_api_image="${IMAGE_REGISTRY}/engine/diffusers-api:${DIFFUSERS_API_TAG}"
   else
-    comfyui_image="engine/comfyui:${COMFYUI_REF}"
+    comfyui_image="engine/comfyui:${COMFYUI_TAG}"
     diffusers_api_image="engine/diffusers-api:${DIFFUSERS_API_TAG}"
   fi
 
@@ -241,7 +241,7 @@ build_single() {
     engines/comfyui)
       local py_ml
       [[ -n "${IMAGE_REGISTRY}" ]] && py_ml="${IMAGE_REGISTRY}/base/python-ml:${BASE_PYTHON_ML_TAG}" || py_ml="base/python-ml:${BASE_PYTHON_ML_TAG}"
-      build_image "engines/comfyui" "engine" "comfyui" "${COMFYUI_REF}" "${py_ml}"
+      build_image "engines/comfyui" "engine" "comfyui" "${COMFYUI_TAG}" "${py_ml}"
       ;;
     engines/llm/vllm)
       local py_ml
@@ -255,7 +255,7 @@ build_single() {
       ;;
     products/video-minimax-h3-singularity)
       local comfy
-      [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}" || comfy="engine/comfyui:${COMFYUI_REF}"
+      [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_TAG}" || comfy="engine/comfyui:${COMFYUI_TAG}"
       build_image "products/video-minimax-h3-singularity" "product" "video-minimax-h3-singularity" "${PRODUCT_VIDEO_MINIMAX_H3_SINGULARITY_TAG}" "${comfy}"
       ;;
     engines/diffusers-api)
@@ -280,17 +280,17 @@ build_single() {
       ;;
     products/image-qwen-image-21-comfyui-4090-24g)
       local comfy
-      [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}" || comfy="engine/comfyui:${COMFYUI_REF}"
+      [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_TAG}" || comfy="engine/comfyui:${COMFYUI_TAG}"
       build_image "products/image-qwen-image-21-comfyui-4090-24g" "product" "image-qwen-image-21-comfyui-4090-24g" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_4090_24G_TAG}" "${comfy}" "products"
       ;;
     products/image-qwen-image-21-comfyui-48g)
       local comfy
-      [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}" || comfy="engine/comfyui:${COMFYUI_REF}"
+      [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_TAG}" || comfy="engine/comfyui:${COMFYUI_TAG}"
       build_image "products/image-qwen-image-21-comfyui-48g" "product" "image-qwen-image-21-comfyui-48g" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_48G_TAG}" "${comfy}" "products"
       ;;
     products/image-qwen-image-21-comfyui-5090)
       local comfy
-      [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}" || comfy="engine/comfyui:${COMFYUI_REF}"
+      [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_TAG}" || comfy="engine/comfyui:${COMFYUI_TAG}"
       build_image "products/image-qwen-image-21-comfyui-5090" "product" "image-qwen-image-21-comfyui-5090" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_5090_TAG}" "${comfy}" "products"
       ;;
     *)

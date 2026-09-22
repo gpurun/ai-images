@@ -64,7 +64,7 @@ push_bases() {
 
 push_engines() {
   echo "==> Pushing engine images..."
-  push_image "engine" "comfyui" "${COMFYUI_REF}"
+  push_image "engine" "comfyui" "${COMFYUI_TAG}"
   push_image "engine" "vllm" "v${VLLM_VERSION}"
   push_image "engine" "sglang" "v${SGLANG_VERSION}"
   push_image "engine" "diffusers-api" "${DIFFUSERS_API_TAG}"
@@ -94,7 +94,7 @@ push_single() {
       push_image "base" "python-ml" "${BASE_PYTHON_ML_TAG}"
       ;;
     engines/comfyui)
-      push_image "engine" "comfyui" "${COMFYUI_REF}"
+      push_image "engine" "comfyui" "${COMFYUI_TAG}"
       ;;
     engines/diffusers-api)
       push_image "engine" "diffusers-api" "${DIFFUSERS_API_TAG}"
