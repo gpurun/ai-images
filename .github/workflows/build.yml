@@ -1,0 +1,206 @@
+name: Build and Push AI Images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'bases/**'
+      - 'engines/**'
+      - 'products/**'
+      - 'versions.env'
+      - 'scripts/build.sh'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Build target (all/base/engine/product or specific path)'
+        required: false
+        default: 'all'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_REGISTRY: ghcr.io/gpurun
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      build_bases: ${{ steps.changes.outputs.bases }}
+      build_engines: ${{ steps.changes.outputs.engines }}
+      build_products: ${{ steps.changes.outputs.products }}
+      target: ${{ steps.set_target.outputs.target }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect changes
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "bases=true" >> $GITHUB_OUTPUT
+            echo "engines=true" >> $GITHUB_OUTPUT
+            echo "products=true" >> $GITHUB_OUTPUT
+          else
+            # Check which layers changed
+            CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+            
+            if echo "$CHANGED_FILES" | grep -qE '^(bases/|versions\.env)'; then
+              echo "bases=true" >> $GITHUB_OUTPUT
+            else
+              echo "bases=false" >> $GITHUB_OUTPUT
+            fi
+            
+            if echo "$CHANGED_FILES" | grep -qE '^(engines/|versions\.env)'; then
+              echo "engines=true" >> $GITHUB_OUTPUT
+            else
+              echo "engines=false" >> $GITHUB_OUTPUT
+            fi
+            
+            if echo "$CHANGED_FILES" | grep -qE '^(products/|versions\.env)'; then
+              echo "products=true" >> $GITHUB_OUTPUT
+            else
+              echo "products=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+      
+      - name: Set target
+        id: set_target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "target=${{ github.event.inputs.target }}" >> $GITHUB_OUTPUT
+          else
+            echo "target=all" >> $GITHUB_OUTPUT
+          fi
+
+  build-bases:
+    needs: setup
+    if: needs.setup.outputs.build_bases == 'true' || needs.setup.outputs.target == 'all' || needs.setup.outputs.target == 'base'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build base images
+        run: |
+          chmod +x scripts/build.sh
+          export IMAGE_REGISTRY=${{ env.IMAGE_REGISTRY }}
+          ./scripts/build.sh base
+      
+      - name: Push base images
+        run: |
+          chmod +x scripts/push.sh
+          export IMAGE_REGISTRY=${{ env.IMAGE_REGISTRY }}
+          ./scripts/push.sh base
+
+  build-engines:
+    needs: [setup, build-bases]
+    if: |
+      always() &&
+      (needs.build-bases.result == 'success' || needs.build-bases.result == 'skipped') &&
+      (needs.setup.outputs.build_engines == 'true' || needs.setup.outputs.target == 'all' || needs.setup.outputs.target == 'engine')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Pull base images (if not rebuilt)
+        if: needs.setup.outputs.build_bases != 'true'
+        run: |
+          source versions.env
+          docker pull ${IMAGE_REGISTRY}/base/cuda-runtime:${BASE_CUDA_RUNTIME_TAG} || true
+          docker pull ${IMAGE_REGISTRY}/base/python-ml:${BASE_PYTHON_ML_TAG} || true
+      
+      - name: Build engine images
+        run: |
+          chmod +x scripts/build.sh
+          export IMAGE_REGISTRY=${{ env.IMAGE_REGISTRY }}
+          ./scripts/build.sh engine
+      
+      - name: Push engine images
+        run: |
+          chmod +x scripts/push.sh
+          export IMAGE_REGISTRY=${{ env.IMAGE_REGISTRY }}
+          ./scripts/push.sh engine
+
+  build-products:
+    needs: [setup, build-bases, build-engines]
+    if: |
+      always() &&
+      (needs.build-engines.result == 'success' || needs.build-engines.result == 'skipped') &&
+      (needs.setup.outputs.build_products == 'true' || needs.setup.outputs.target == 'all' || needs.setup.outputs.target == 'product')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Pull parent images (if not rebuilt)
+        if: needs.setup.outputs.build_engines != 'true'
+        run: |
+          source versions.env
+          docker pull ${IMAGE_REGISTRY}/base/python-ml:${BASE_PYTHON_ML_TAG} || true
+          docker pull ${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF} || true
+      
+      - name: Build product images
+        run: |
+          chmod +x scripts/build.sh
+          export IMAGE_REGISTRY=${{ env.IMAGE_REGISTRY }}
+          ./scripts/build.sh product
+      
+      - name: Push product images
+        run: |
+          chmod +x scripts/push.sh
+          export IMAGE_REGISTRY=${{ env.IMAGE_REGISTRY }}
+          ./scripts/push.sh product
+
+  summary:
+    needs: [build-bases, build-engines, build-products]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build summary
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bases**: ${{ needs.build-bases.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Engines**: ${{ needs.build-engines.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Products**: ${{ needs.build-products.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Images pushed to: \`${{ env.IMAGE_REGISTRY }}\`" >> $GITHUB_STEP_SUMMARY
