@@ -16,10 +16,18 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
 
 # Load version pins
+# Save IMAGE_REGISTRY from environment before sourcing versions.env
+_SAVED_IMAGE_REGISTRY="${IMAGE_REGISTRY:-}"
+
 if [[ -f versions.env ]]; then
   set -a
   source versions.env
   set +a
+fi
+
+# Restore IMAGE_REGISTRY from environment if it was set
+if [[ -n "${_SAVED_IMAGE_REGISTRY}" ]]; then
+  IMAGE_REGISTRY="${_SAVED_IMAGE_REGISTRY}"
 fi
 
 # Determine image naming: ghcr.io/gpurun/<tier>/<name> or local <tier>/<name>
