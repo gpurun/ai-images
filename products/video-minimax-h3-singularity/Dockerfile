@@ -2,6 +2,7 @@
 # Product: video-minimax-h3-singularity
 # MiniMax-H3 community fine-tune (WarmBloodAban) on ComfyUI engine.
 # Do NOT COPY multi-GB weights into image layers — download at runtime / mount.
+# Built with: Python 3.12, CUDA 12.8, PyTorch 2.7.0+cu128, ComfyUI v0.37.0
 # =============================================================================
 
 ARG BASE_IMAGE=engine/comfyui:v0.37.0
