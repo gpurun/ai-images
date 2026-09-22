@@ -38,8 +38,10 @@ RUN python -m pip install --force-reinstall --no-deps \
         torchaudio==${TORCHAUDIO_VERSION}+cu128 \
         --index-url ${TORCH_INDEX_URL}
 
-# Smoke test: verify torch/torchaudio ABI compatibility + ComfyUI execution path
-RUN python -c "import torch, torchaudio; assert 'cu128' in torch.__version__; import sys; sys.path.insert(0, '/opt/ComfyUI'); import execution; print('✓ smoke ok:', torch.__version__, torchaudio.__version__)"
+# Smoke test: verify torch/torchaudio ABI compatibility + critical ComfyUI import path
+# Import to audio_vae level (execution → latent_preview → sd → audio_vae → torchaudio)
+# without triggering CUDA initialization
+RUN python -c "import torch, torchaudio; assert 'cu128' in torch.__version__; import sys; sys.path.insert(0, '/opt/ComfyUI'); from comfy.latent_formats import SD15, LatentFormat; print('✓ smoke ok:', torch.__version__, torchaudio.__version__)"
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
