@@ -296,7 +296,7 @@ jobs:
         run: |
           source versions.env
           docker pull ${IMAGE_REGISTRY}/base/python-ml:${BASE_PYTHON_ML_TAG} || true
-          docker pull ${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF} || true
+          docker pull ${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_TAG} || true
       
       - name: Build product images
         run: |

@@ -38,8 +38,8 @@ RUN python -m pip install --force-reinstall --no-deps \
         torchaudio==${TORCHAUDIO_VERSION}+cu128 \
         --index-url ${TORCH_INDEX_URL}
 
-# Smoke test: verify torch/torchaudio ABI compatibility
-RUN python -c "import torch, torchaudio; print(f'✓ torch {torch.__version__}, torchaudio {torchaudio.__version__}')"
+# Smoke test: verify torch/torchaudio ABI compatibility + ComfyUI execution path
+RUN python -c "import torch, torchaudio; assert 'cu128' in torch.__version__; import sys; sys.path.insert(0, '/opt/ComfyUI'); import execution; print('✓ smoke ok:', torch.__version__, torchaudio.__version__)"
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
