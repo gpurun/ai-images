@@ -61,6 +61,17 @@ engines:
     depends_on:
       - python-ml
 
+  - name: diffusers-api
+    path: engines/diffusers-api
+    tag: v1
+    image: ghcr.io/gpurun/engine/diffusers-api:v1
+    description: FastAPI HTTP server for diffusers image generation pipelines
+    framework: Diffusers
+    version: 0.33.0+
+    port: 8000
+    depends_on:
+      - python-ml
+
 products:
   - name: video-minimax-h3-singularity
     display_name: MiniMax H3 Singularity 视频生成
@@ -133,4 +144,252 @@ products:
     links:
       model_card: https://huggingface.co/WarmBloodAban/Minimax-h3_Singularity
       companion_models: https://huggingface.co/Comfy-Org/MiniMax-H3
+      comfyui: https://github.com/comfyanonymous/ComfyUI
+
+  # Qwen-Image-2.1 产品系列: 2 runtimes × 3 VRAM SKUs = 6 products
+  
+  - name: image-qwen-image-21-diffusers-4090-24g
+    display_name: Qwen-Image-2.1 Diffusers API (4090 24GB)
+    path: products/image-qwen-image-21-diffusers-4090-24g
+    tag: v1
+    image: ghcr.io/gpurun/product/image-qwen-image-21-diffusers-4090-24g:v1
+    description: |
+      Qwen-Image-2.1 via Diffusers HTTP API, optimized for RTX 4090 (24GB VRAM).
+      FP16/FP8 quantization, 1024x1024 default resolution, CPU offload enabled.
+    category: image-generation
+    engine: diffusers-api
+    depends_on:
+      - diffusers-api
+    model:
+      source: huggingface
+      repo: Qwen/Qwen-Image-2.1
+      type: diffusion-transformer
+      task: [text-to-image, image-editing]
+    ports: [8000]
+    volumes: [/models, /output, /input]
+    environment:
+      VARIANT: 4090-24g
+      MODEL_PATH: /models
+      PORT: 8000
+      TORCH_DTYPE: fp16
+      ENABLE_CPU_OFFLOAD: 1
+      DEFAULT_WIDTH: 1024
+      DEFAULT_HEIGHT: 1024
+    resources:
+      gpu: required
+      vram_min_gb: 24
+      recommended:
+        gpu: NVIDIA RTX 4090
+        vram_gb: 24
+    quickstart: |
+      docker run -d --gpus all -p 8000:8000 \
+        -v $(pwd)/models:/models \
+        -e AUTO_DOWNLOAD_WEIGHTS=1 \
+        ghcr.io/gpurun/product/image-qwen-image-21-diffusers-4090-24g:v1
+    links:
+      model_card: https://huggingface.co/Qwen/Qwen-Image-2.1
+
+  - name: image-qwen-image-21-diffusers-48g
+    display_name: Qwen-Image-2.1 Diffusers API (48GB)
+    path: products/image-qwen-image-21-diffusers-48g
+    tag: v1
+    image: ghcr.io/gpurun/product/image-qwen-image-21-diffusers-48g:v1
+    description: |
+      Qwen-Image-2.1 via Diffusers HTTP API, 48GB VRAM class.
+      Full BF16 precision, native 2048x2048 resolution.
+    category: image-generation
+    engine: diffusers-api
+    depends_on:
+      - diffusers-api
+    model:
+      source: huggingface
+      repo: Qwen/Qwen-Image-2.1
+      type: diffusion-transformer
+      task: [text-to-image, image-editing]
+    ports: [8000]
+    volumes: [/models, /output, /input]
+    environment:
+      VARIANT: 48g
+      MODEL_PATH: /models
+      PORT: 8000
+      TORCH_DTYPE: bf16
+      ENABLE_CPU_OFFLOAD: 0
+      DEFAULT_WIDTH: 2048
+      DEFAULT_HEIGHT: 2048
+    resources:
+      gpu: required
+      vram_min_gb: 48
+      recommended:
+        gpu: NVIDIA A100-80GB / H100
+        vram_gb: 48+
+    quickstart: |
+      docker run -d --gpus all -p 8000:8000 \
+        -v $(pwd)/models:/models \
+        -e AUTO_DOWNLOAD_WEIGHTS=1 \
+        ghcr.io/gpurun/product/image-qwen-image-21-diffusers-48g:v1
+    links:
+      model_card: https://huggingface.co/Qwen/Qwen-Image-2.1
+
+  - name: image-qwen-image-21-diffusers-5090
+    display_name: Qwen-Image-2.1 Diffusers API (RTX 5090)
+    path: products/image-qwen-image-21-diffusers-5090
+    tag: v1
+    image: ghcr.io/gpurun/product/image-qwen-image-21-diffusers-5090:v1
+    description: |
+      Qwen-Image-2.1 via Diffusers HTTP API, optimized for RTX 5090 (~32GB).
+      BF16 precision, 1536x1536 default resolution.
+    category: image-generation
+    engine: diffusers-api
+    depends_on:
+      - diffusers-api
+    model:
+      source: huggingface
+      repo: Qwen/Qwen-Image-2.1
+      type: diffusion-transformer
+      task: [text-to-image, image-editing]
+    ports: [8000]
+    volumes: [/models, /output, /input]
+    environment:
+      VARIANT: 5090
+      MODEL_PATH: /models
+      PORT: 8000
+      TORCH_DTYPE: bf16
+      ENABLE_CPU_OFFLOAD: 0
+      DEFAULT_WIDTH: 1536
+      DEFAULT_HEIGHT: 1536
+    resources:
+      gpu: required
+      vram_min_gb: 32
+      recommended:
+        gpu: NVIDIA RTX 5090
+        vram_gb: 32
+    quickstart: |
+      docker run -d --gpus all -p 8000:8000 \
+        -v $(pwd)/models:/models \
+        -e AUTO_DOWNLOAD_WEIGHTS=1 \
+        ghcr.io/gpurun/product/image-qwen-image-21-diffusers-5090:v1
+    links:
+      model_card: https://huggingface.co/Qwen/Qwen-Image-2.1
+
+  - name: image-qwen-image-21-comfyui-4090-24g
+    display_name: Qwen-Image-2.1 ComfyUI (4090 24GB)
+    path: products/image-qwen-image-21-comfyui-4090-24g
+    tag: v1
+    image: ghcr.io/gpurun/product/image-qwen-image-21-comfyui-4090-24g:v1
+    description: |
+      Qwen-Image-2.1 on ComfyUI, optimized for RTX 4090 (24GB VRAM).
+      FP8/GGUF quantized workflow, 1024x1024 default resolution.
+    category: image-generation
+    engine: comfyui
+    depends_on:
+      - comfyui
+    model:
+      source: huggingface
+      repo: Qwen/Qwen-Image-2.1
+      type: diffusion-transformer
+      task: [text-to-image, image-editing]
+    ports: [8188]
+    volumes: [/models, /output, /input]
+    environment:
+      VARIANT: 4090-24g
+      COMFYUI_PORT: 8188
+      MODEL_PATH: /models
+      QUANT_MODE: fp8
+      DEFAULT_WIDTH: 1024
+      DEFAULT_HEIGHT: 1024
+    resources:
+      gpu: required
+      vram_min_gb: 24
+      recommended:
+        gpu: NVIDIA RTX 4090
+        vram_gb: 24
+    quickstart: |
+      docker run -d --gpus all -p 8188:8188 \
+        -v $(pwd)/models:/models \
+        -e AUTO_DOWNLOAD_WEIGHTS=1 \
+        ghcr.io/gpurun/product/image-qwen-image-21-comfyui-4090-24g:v1
+    links:
+      model_card: https://huggingface.co/Qwen/Qwen-Image-2.1
+      comfyui: https://github.com/comfyanonymous/ComfyUI
+
+  - name: image-qwen-image-21-comfyui-48g
+    display_name: Qwen-Image-2.1 ComfyUI (48GB)
+    path: products/image-qwen-image-21-comfyui-48g
+    tag: v1
+    image: ghcr.io/gpurun/product/image-qwen-image-21-comfyui-48g:v1
+    description: |
+      Qwen-Image-2.1 on ComfyUI, 48GB VRAM class.
+      Full BF16 precision, native 2048x2048 workflows.
+    category: image-generation
+    engine: comfyui
+    depends_on:
+      - comfyui
+    model:
+      source: huggingface
+      repo: Qwen/Qwen-Image-2.1
+      type: diffusion-transformer
+      task: [text-to-image, image-editing]
+    ports: [8188]
+    volumes: [/models, /output, /input]
+    environment:
+      VARIANT: 48g
+      COMFYUI_PORT: 8188
+      MODEL_PATH: /models
+      QUANT_MODE: bf16
+      DEFAULT_WIDTH: 2048
+      DEFAULT_HEIGHT: 2048
+    resources:
+      gpu: required
+      vram_min_gb: 48
+      recommended:
+        gpu: NVIDIA A100-80GB / H100
+        vram_gb: 48+
+    quickstart: |
+      docker run -d --gpus all -p 8188:8188 \
+        -v $(pwd)/models:/models \
+        -e AUTO_DOWNLOAD_WEIGHTS=1 \
+        ghcr.io/gpurun/product/image-qwen-image-21-comfyui-48g:v1
+    links:
+      model_card: https://huggingface.co/Qwen/Qwen-Image-2.1
+      comfyui: https://github.com/comfyanonymous/ComfyUI
+
+  - name: image-qwen-image-21-comfyui-5090
+    display_name: Qwen-Image-2.1 ComfyUI (RTX 5090)
+    path: products/image-qwen-image-21-comfyui-5090
+    tag: v1
+    image: ghcr.io/gpurun/product/image-qwen-image-21-comfyui-5090:v1
+    description: |
+      Qwen-Image-2.1 on ComfyUI, optimized for RTX 5090 (~32GB).
+      BF16 precision, 1536x1536 default workflows.
+    category: image-generation
+    engine: comfyui
+    depends_on:
+      - comfyui
+    model:
+      source: huggingface
+      repo: Qwen/Qwen-Image-2.1
+      type: diffusion-transformer
+      task: [text-to-image, image-editing]
+    ports: [8188]
+    volumes: [/models, /output, /input]
+    environment:
+      VARIANT: 5090
+      COMFYUI_PORT: 8188
+      MODEL_PATH: /models
+      QUANT_MODE: bf16
+      DEFAULT_WIDTH: 1536
+      DEFAULT_HEIGHT: 1536
+    resources:
+      gpu: required
+      vram_min_gb: 32
+      recommended:
+        gpu: NVIDIA RTX 5090
+        vram_gb: 32
+    quickstart: |
+      docker run -d --gpus all -p 8188:8188 \
+        -v $(pwd)/models:/models \
+        -e AUTO_DOWNLOAD_WEIGHTS=1 \
+        ghcr.io/gpurun/product/image-qwen-image-21-comfyui-5090:v1
+    links:
+      model_card: https://huggingface.co/Qwen/Qwen-Image-2.1
       comfyui: https://github.com/comfyanonymous/ComfyUI

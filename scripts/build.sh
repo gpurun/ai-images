@@ -132,16 +132,28 @@ build_engines() {
     "sglang" \
     "v${SGLANG_VERSION}" \
     "${python_ml_image}"
+
+  # Diffusers API engine
+  build_image \
+    "engines/diffusers-api" \
+    "engine" \
+    "diffusers-api" \
+    "${DIFFUSERS_API_TAG}" \
+    "${python_ml_image}"
 }
 
 build_products() {
   echo "==> Building product images..."
   
   local comfyui_image
+  local diffusers_api_image
+  
   if [[ -n "${IMAGE_REGISTRY}" ]]; then
     comfyui_image="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}"
+    diffusers_api_image="${IMAGE_REGISTRY}/engine/diffusers-api:${DIFFUSERS_API_TAG}"
   else
     comfyui_image="engine/comfyui:${COMFYUI_REF}"
+    diffusers_api_image="engine/diffusers-api:${DIFFUSERS_API_TAG}"
   fi
 
   # video-minimax-h3-singularity product
@@ -150,6 +162,50 @@ build_products() {
     "product" \
     "video-minimax-h3-singularity" \
     "${PRODUCT_VIDEO_MINIMAX_H3_SINGULARITY_TAG}" \
+    "${comfyui_image}"
+
+  # Qwen-Image-2.1 Diffusers products
+  build_image \
+    "products/image-qwen-image-21-diffusers-4090-24g" \
+    "product" \
+    "image-qwen-image-21-diffusers-4090-24g" \
+    "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_4090_24G_TAG}" \
+    "${diffusers_api_image}"
+
+  build_image \
+    "products/image-qwen-image-21-diffusers-48g" \
+    "product" \
+    "image-qwen-image-21-diffusers-48g" \
+    "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_48G_TAG}" \
+    "${diffusers_api_image}"
+
+  build_image \
+    "products/image-qwen-image-21-diffusers-5090" \
+    "product" \
+    "image-qwen-image-21-diffusers-5090" \
+    "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_5090_TAG}" \
+    "${diffusers_api_image}"
+
+  # Qwen-Image-2.1 ComfyUI products
+  build_image \
+    "products/image-qwen-image-21-comfyui-4090-24g" \
+    "product" \
+    "image-qwen-image-21-comfyui-4090-24g" \
+    "${PRODUCT_QWEN_IMAGE_21_COMFYUI_4090_24G_TAG}" \
+    "${comfyui_image}"
+
+  build_image \
+    "products/image-qwen-image-21-comfyui-48g" \
+    "product" \
+    "image-qwen-image-21-comfyui-48g" \
+    "${PRODUCT_QWEN_IMAGE_21_COMFYUI_48G_TAG}" \
+    "${comfyui_image}"
+
+  build_image \
+    "products/image-qwen-image-21-comfyui-5090" \
+    "product" \
+    "image-qwen-image-21-comfyui-5090" \
+    "${PRODUCT_QWEN_IMAGE_21_COMFYUI_5090_TAG}" \
     "${comfyui_image}"
 }
 

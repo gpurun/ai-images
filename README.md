@@ -158,6 +158,61 @@ docker run -d \
 
 加载 MiniMax H3 工作流并开始生成视频！
 
+## 🖼️ 产品系列：Qwen-Image-2.1 图像生成
+
+阿里通义千问最新图像生成模型，提供 **6 个 SKU** 覆盖不同显存和运行时需求。
+
+### 模型信息
+- **Hugging Face**: [Qwen/Qwen-Image-2.1](https://huggingface.co/Qwen/Qwen-Image-2.1)
+- **类型**: 文本生成图像 (T2I)、图像编辑
+- **开发者**: 阿里云 / 通义千问团队
+
+### 产品矩阵 (2 运行时 × 3 VRAM SKU)
+
+#### Diffusers HTTP API 运行时 (端口 8000)
+
+| SKU | 显存 | 精度 | 分辨率 | 镜像 |
+|-----|------|------|--------|------|
+| 4090-24g | 24GB | FP16 + CPU offload | 1024² | `image-qwen-image-21-diffusers-4090-24g:v1` |
+| 48g | 48GB | BF16 full | 2048² | `image-qwen-image-21-diffusers-48g:v1` |
+| 5090 | 32GB | BF16 | 1536² | `image-qwen-image-21-diffusers-5090:v1` |
+
+**快速启动** (以 4090 24GB 为例):
+```bash
+docker run -d --gpus all -p 8000:8000 \
+  -v $(pwd)/models:/models \
+  -e AUTO_DOWNLOAD_WEIGHTS=1 \
+  ghcr.io/gpurun/product/image-qwen-image-21-diffusers-4090-24g:v1
+
+# API 调用
+curl -X POST http://localhost:8000/generate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "一只可爱的橘猫", "width": 1024, "height": 1024}'
+```
+
+#### ComfyUI 运行时 (端口 8188)
+
+| SKU | 显存 | 精度 | 分辨率 | 镜像 |
+|-----|------|------|--------|------|
+| 4090-24g | 24GB | FP8/GGUF 量化 | 1024² | `image-qwen-image-21-comfyui-4090-24g:v1` |
+| 48g | 48GB | BF16 full | 2048² | `image-qwen-image-21-comfyui-48g:v1` |
+| 5090 | 32GB | BF16 | 1536² | `image-qwen-image-21-comfyui-5090:v1` |
+
+**快速启动**:
+```bash
+docker run -d --gpus all -p 8188:8188 \
+  -v $(pwd)/models:/models \
+  -e AUTO_DOWNLOAD_WEIGHTS=1 \
+  ghcr.io/gpurun/product/image-qwen-image-21-comfyui-4090-24g:v1
+```
+
+访问 ComfyUI: **http://localhost:8188**
+
+### 详细文档
+完整的环境变量、API 文档、性能对比、故障排除等请查看：
+- [Qwen-Image-2.1 完整文档](products/_qwen-image-21-shared/README.md)
+- 各 SKU 产品目录: `products/image-qwen-image-21-*/README.md`
+
 ## 🔧 开发指南
 
 ### 修改版本锁定
