@@ -1,0 +1,62 @@
+# =============================================================================
+# Product: Qwen-Image-2.1 on Diffusers API (multi-VRAM variant)
+# Variants: 4090-24g, 48g, 5090 (controlled by build arg VARIANT)
+# =============================================================================
+
+ARG BASE_IMAGE=engine/diffusers-api:v1
+FROM ${BASE_IMAGE}
+
+# Variant: 4090-24g | 48g | 5090
+ARG VARIANT=4090-24g
+ENV VARIANT=${VARIANT}
+
+# Model configuration
+ENV MODEL_PATH=/models \
+    WEIGHTS_ROOT=/models \
+    PORT=8000 \
+    HOST=0.0.0.0 \
+    AUTO_DOWNLOAD_WEIGHTS=0
+
+# Variant-specific defaults
+# These can be overridden at runtime via environment variables
+RUN case "${VARIANT}" in \
+      4090-24g) \
+        # FP8 quantization, lower resolution defaults, enable CPU offload
+        echo "export TORCH_DTYPE=fp16" >> /etc/profile.d/variant.sh && \
+        echo "export DEFAULT_WIDTH=1024" >> /etc/profile.d/variant.sh && \
+        echo "export DEFAULT_HEIGHT=1024" >> /etc/profile.d/variant.sh && \
+        echo "export ENABLE_CPU_OFFLOAD=1" >> /etc/profile.d/variant.sh \
+        ;; \
+      48g) \
+        # Full BF16, native 2K resolution
+        echo "export TORCH_DTYPE=bf16" >> /etc/profile.d/variant.sh && \
+        echo "export DEFAULT_WIDTH=2048" >> /etc/profile.d/variant.sh && \
+        echo "export DEFAULT_HEIGHT=2048" >> /etc/profile.d/variant.sh && \
+        echo "export ENABLE_CPU_OFFLOAD=0" >> /etc/profile.d/variant.sh \
+        ;; \
+      5090) \
+        # BF16 on RTX 5090 (32GB), moderate 1.5K-2K resolution
+        echo "export TORCH_DTYPE=bf16" >> /etc/profile.d/variant.sh && \
+        echo "export DEFAULT_WIDTH=1536" >> /etc/profile.d/variant.sh && \
+        echo "export DEFAULT_HEIGHT=1536" >> /etc/profile.d/variant.sh && \
+        echo "export ENABLE_CPU_OFFLOAD=0" >> /etc/profile.d/variant.sh \
+        ;; \
+      *) \
+        echo "Unknown VARIANT: ${VARIANT}" >&2; exit 1 \
+        ;; \
+    esac
+
+COPY --from=shared /download_weights.sh /usr/local/bin/download_weights.sh
+COPY --from=shared /entrypoint.sh /usr/local/bin/entrypoint-product.sh
+RUN chmod +x /usr/local/bin/download_weights.sh /usr/local/bin/entrypoint-product.sh
+
+# Prepare mount points
+RUN mkdir -p /models /output /input
+
+EXPOSE 8000
+WORKDIR /opt/diffusers-api
+
+VOLUME ["/models", "/output", "/input"]
+
+ENTRYPOINT ["/usr/local/bin/entrypoint-product.sh"]
+CMD ["serve"]
