@@ -88,6 +88,9 @@ push_single() {
     engines/comfyui)
       push_image "engine" "comfyui" "${COMFYUI_REF}"
       ;;
+    engines/diffusers-api)
+      push_image "engine" "diffusers-api" "${DIFFUSERS_API_TAG}"
+      ;;
     engines/llm/vllm)
       push_image "engine" "vllm" "v${VLLM_VERSION}"
       ;;
@@ -96,6 +99,24 @@ push_single() {
       ;;
     products/video-minimax-h3-singularity)
       push_image "product" "video-minimax-h3-singularity" "${PRODUCT_VIDEO_MINIMAX_H3_SINGULARITY_TAG}"
+      ;;
+    products/image-qwen-image-21-diffusers-4090-24g)
+      push_image "product" "image-qwen-image-21-diffusers-4090-24g" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_4090_24G_TAG}"
+      ;;
+    products/image-qwen-image-21-diffusers-48g)
+      push_image "product" "image-qwen-image-21-diffusers-48g" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_48G_TAG}"
+      ;;
+    products/image-qwen-image-21-diffusers-5090)
+      push_image "product" "image-qwen-image-21-diffusers-5090" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_5090_TAG}"
+      ;;
+    products/image-qwen-image-21-comfyui-4090-24g)
+      push_image "product" "image-qwen-image-21-comfyui-4090-24g" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_4090_24G_TAG}"
+      ;;
+    products/image-qwen-image-21-comfyui-48g)
+      push_image "product" "image-qwen-image-21-comfyui-48g" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_48G_TAG}"
+      ;;
+    products/image-qwen-image-21-comfyui-5090)
+      push_image "product" "image-qwen-image-21-comfyui-5090" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_5090_TAG}"
       ;;
     *)
       echo "ERROR: Unknown path '${path}'" >&2

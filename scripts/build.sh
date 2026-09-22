@@ -241,6 +241,41 @@ build_single() {
       [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}" || comfy="engine/comfyui:${COMFYUI_REF}"
       build_image "products/video-minimax-h3-singularity" "product" "video-minimax-h3-singularity" "${PRODUCT_VIDEO_MINIMAX_H3_SINGULARITY_TAG}" "${comfy}"
       ;;
+    engines/diffusers-api)
+      local py_ml
+      [[ -n "${IMAGE_REGISTRY}" ]] && py_ml="${IMAGE_REGISTRY}/base/python-ml:${BASE_PYTHON_ML_TAG}" || py_ml="base/python-ml:${BASE_PYTHON_ML_TAG}"
+      build_image "engines/diffusers-api" "engine" "diffusers-api" "${DIFFUSERS_API_TAG}" "${py_ml}"
+      ;;
+    products/image-qwen-image-21-diffusers-4090-24g)
+      local diffusers
+      [[ -n "${IMAGE_REGISTRY}" ]] && diffusers="${IMAGE_REGISTRY}/engine/diffusers-api:${DIFFUSERS_API_TAG}" || diffusers="engine/diffusers-api:${DIFFUSERS_API_TAG}"
+      build_image "products/image-qwen-image-21-diffusers-4090-24g" "product" "image-qwen-image-21-diffusers-4090-24g" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_4090_24G_TAG}" "${diffusers}"
+      ;;
+    products/image-qwen-image-21-diffusers-48g)
+      local diffusers
+      [[ -n "${IMAGE_REGISTRY}" ]] && diffusers="${IMAGE_REGISTRY}/engine/diffusers-api:${DIFFUSERS_API_TAG}" || diffusers="engine/diffusers-api:${DIFFUSERS_API_TAG}"
+      build_image "products/image-qwen-image-21-diffusers-48g" "product" "image-qwen-image-21-diffusers-48g" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_48G_TAG}" "${diffusers}"
+      ;;
+    products/image-qwen-image-21-diffusers-5090)
+      local diffusers
+      [[ -n "${IMAGE_REGISTRY}" ]] && diffusers="${IMAGE_REGISTRY}/engine/diffusers-api:${DIFFUSERS_API_TAG}" || diffusers="engine/diffusers-api:${DIFFUSERS_API_TAG}"
+      build_image "products/image-qwen-image-21-diffusers-5090" "product" "image-qwen-image-21-diffusers-5090" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_5090_TAG}" "${diffusers}"
+      ;;
+    products/image-qwen-image-21-comfyui-4090-24g)
+      local comfy
+      [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}" || comfy="engine/comfyui:${COMFYUI_REF}"
+      build_image "products/image-qwen-image-21-comfyui-4090-24g" "product" "image-qwen-image-21-comfyui-4090-24g" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_4090_24G_TAG}" "${comfy}"
+      ;;
+    products/image-qwen-image-21-comfyui-48g)
+      local comfy
+      [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}" || comfy="engine/comfyui:${COMFYUI_REF}"
+      build_image "products/image-qwen-image-21-comfyui-48g" "product" "image-qwen-image-21-comfyui-48g" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_48G_TAG}" "${comfy}"
+      ;;
+    products/image-qwen-image-21-comfyui-5090)
+      local comfy
+      [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}" || comfy="engine/comfyui:${COMFYUI_REF}"
+      build_image "products/image-qwen-image-21-comfyui-5090" "product" "image-qwen-image-21-comfyui-5090" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_5090_TAG}" "${comfy}"
+      ;;
     *)
       echo "ERROR: Unknown path '${path}'" >&2
       exit 1

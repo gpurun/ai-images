@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 'Build target (all/base/engine/product or specific path)'
+        description: 'Build target (all/base/engine/product or specific path like products/video-minimax-h3-singularity)'
         required: false
         default: 'all'
 
@@ -23,7 +23,115 @@ env:
   IMAGE_REGISTRY: ghcr.io/gpurun
 
 jobs:
+  # Single-path build job for specific product targets
+  build-path-target:
+    if: github.event_name == 'workflow_dispatch' && startsWith(github.event.inputs.target, 'products/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Free disk space
+        run: |
+          echo "==> Disk space before cleanup:"
+          df -h
+          
+          # Remove unnecessary pre-installed software
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo apt-get remove -y '^aspnetcore-.*' '^dotnet-.*' '^llvm-.*' 'php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-chrome-stable firefox powershell mono-devel
+          sudo apt-get autoremove -y
+          sudo apt-get clean
+          
+          echo "==> Disk space after cleanup:"
+          df -h
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build dependency chain for target
+        run: |
+          TARGET="${{ github.event.inputs.target }}"
+          echo "==> Building dependency chain for: ${TARGET}"
+          
+          chmod +x scripts/build.sh scripts/push.sh
+          export IMAGE_REGISTRY=${{ env.IMAGE_REGISTRY }}
+          
+          # Build dependency chain explicitly
+          if [[ "${TARGET}" == "products/video-minimax-h3-singularity" ]]; then
+            echo "==> Building Singularity product dependency chain"
+            ./scripts/build.sh bases/cuda-runtime
+            ./scripts/build.sh bases/python-ml
+            ./scripts/build.sh engines/comfyui
+            ./scripts/build.sh "${TARGET}"
+          elif [[ "${TARGET}" == products/image-qwen-image-21-diffusers-* ]]; then
+            echo "==> Building Qwen Diffusers product dependency chain"
+            ./scripts/build.sh bases/cuda-runtime
+            ./scripts/build.sh bases/python-ml
+            ./scripts/build.sh engines/diffusers-api
+            ./scripts/build.sh "${TARGET}"
+          elif [[ "${TARGET}" == products/image-qwen-image-21-comfyui-* ]]; then
+            echo "==> Building Qwen ComfyUI product dependency chain"
+            ./scripts/build.sh bases/cuda-runtime
+            ./scripts/build.sh bases/python-ml
+            ./scripts/build.sh engines/comfyui
+            ./scripts/build.sh "${TARGET}"
+          else
+            echo "==> Building single target: ${TARGET}"
+            ./scripts/build.sh "${TARGET}"
+          fi
+      
+      - name: Push built images
+        run: |
+          export IMAGE_REGISTRY=${{ env.IMAGE_REGISTRY }}
+          TARGET="${{ github.event.inputs.target }}"
+          
+          # Push only the images we built
+          # For products/video-minimax-h3-singularity: push bases + comfyui + product
+          if [[ "${TARGET}" == "products/video-minimax-h3-singularity" ]]; then
+            echo "==> Pushing dependency chain for Singularity product"
+            ./scripts/push.sh bases/cuda-runtime
+            ./scripts/push.sh bases/python-ml
+            ./scripts/push.sh engines/comfyui
+            ./scripts/push.sh "${TARGET}"
+          elif [[ "${TARGET}" == products/image-qwen-image-21-diffusers-* ]]; then
+            echo "==> Pushing dependency chain for Qwen Diffusers product"
+            ./scripts/push.sh bases/cuda-runtime
+            ./scripts/push.sh bases/python-ml
+            ./scripts/push.sh engines/diffusers-api
+            ./scripts/push.sh "${TARGET}"
+          elif [[ "${TARGET}" == products/image-qwen-image-21-comfyui-* ]]; then
+            echo "==> Pushing dependency chain for Qwen ComfyUI product"
+            ./scripts/push.sh bases/cuda-runtime
+            ./scripts/push.sh bases/python-ml
+            ./scripts/push.sh engines/comfyui
+            ./scripts/push.sh "${TARGET}"
+          else
+            echo "==> Pushing single target: ${TARGET}"
+            ./scripts/push.sh "${TARGET}"
+          fi
+      
+      - name: Build summary
+        if: always()
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target**: \`${{ github.event.inputs.target }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registry**: \`${{ env.IMAGE_REGISTRY }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Built Images" >> $GITHUB_STEP_SUMMARY
+          docker images --format "table {{.Repository}}:{{.Tag}}\t{{.Size}}" | grep -E "(base|engine|product)" || echo "No images found"
+
   setup:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.target == 'all' || github.event.inputs.target == 'base' || github.event.inputs.target == 'engine' || github.event.inputs.target == 'product'
     runs-on: ubuntu-latest
     outputs:
       build_bases: ${{ steps.changes.outputs.bases }}
@@ -119,6 +227,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo apt-get autoremove -y
+          sudo apt-get clean
+      
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
@@ -161,6 +275,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo apt-get autoremove -y
+          sudo apt-get clean
+      
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
@@ -192,7 +312,7 @@ jobs:
 
   summary:
     needs: [build-bases, build-engines, build-products]
-    if: always()
+    if: always() && (needs.build-bases.result != 'skipped' || needs.build-engines.result != 'skipped' || needs.build-products.result != 'skipped')
     runs-on: ubuntu-latest
     steps:
       - name: Build summary
