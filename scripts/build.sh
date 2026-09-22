@@ -40,6 +40,7 @@ build_image() {
   local name="$3"       # cuda-runtime, comfyui, video-minimax-h3-singularity, etc.
   local tag="$4"
   local base_image="${5:-}"  # Parent image (optional for cuda-runtime)
+  local build_context="${6:-${dockerfile_dir}}"  # Build context (default: same as dockerfile_dir)
 
   echo ""
   echo "========================================================================"
@@ -72,7 +73,7 @@ build_image() {
     build_args+=(--build-arg "BASE_IMAGE=${base_image}")
   fi
 
-  build_args+=("${dockerfile_dir}")
+  build_args+=("${build_context}")
 
   echo "→ docker build ${build_args[*]}"
   docker build "${build_args[@]}"
@@ -178,21 +179,24 @@ build_products() {
     "product" \
     "image-qwen-image-21-diffusers-4090-24g" \
     "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_4090_24G_TAG}" \
-    "${diffusers_api_image}"
+    "${diffusers_api_image}" \
+    "products"
 
   build_image \
     "products/image-qwen-image-21-diffusers-48g" \
     "product" \
     "image-qwen-image-21-diffusers-48g" \
     "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_48G_TAG}" \
-    "${diffusers_api_image}"
+    "${diffusers_api_image}" \
+    "products"
 
   build_image \
     "products/image-qwen-image-21-diffusers-5090" \
     "product" \
     "image-qwen-image-21-diffusers-5090" \
     "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_5090_TAG}" \
-    "${diffusers_api_image}"
+    "${diffusers_api_image}" \
+    "products"
 
   # Qwen-Image-2.1 ComfyUI products
   build_image \
@@ -200,21 +204,24 @@ build_products() {
     "product" \
     "image-qwen-image-21-comfyui-4090-24g" \
     "${PRODUCT_QWEN_IMAGE_21_COMFYUI_4090_24G_TAG}" \
-    "${comfyui_image}"
+    "${comfyui_image}" \
+    "products"
 
   build_image \
     "products/image-qwen-image-21-comfyui-48g" \
     "product" \
     "image-qwen-image-21-comfyui-48g" \
     "${PRODUCT_QWEN_IMAGE_21_COMFYUI_48G_TAG}" \
-    "${comfyui_image}"
+    "${comfyui_image}" \
+    "products"
 
   build_image \
     "products/image-qwen-image-21-comfyui-5090" \
     "product" \
     "image-qwen-image-21-comfyui-5090" \
     "${PRODUCT_QWEN_IMAGE_21_COMFYUI_5090_TAG}" \
-    "${comfyui_image}"
+    "${comfyui_image}" \
+    "products"
 }
 
 build_single() {
@@ -257,32 +264,32 @@ build_single() {
     products/image-qwen-image-21-diffusers-4090-24g)
       local diffusers
       [[ -n "${IMAGE_REGISTRY}" ]] && diffusers="${IMAGE_REGISTRY}/engine/diffusers-api:${DIFFUSERS_API_TAG}" || diffusers="engine/diffusers-api:${DIFFUSERS_API_TAG}"
-      build_image "products/image-qwen-image-21-diffusers-4090-24g" "product" "image-qwen-image-21-diffusers-4090-24g" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_4090_24G_TAG}" "${diffusers}"
+      build_image "products/image-qwen-image-21-diffusers-4090-24g" "product" "image-qwen-image-21-diffusers-4090-24g" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_4090_24G_TAG}" "${diffusers}" "products"
       ;;
     products/image-qwen-image-21-diffusers-48g)
       local diffusers
       [[ -n "${IMAGE_REGISTRY}" ]] && diffusers="${IMAGE_REGISTRY}/engine/diffusers-api:${DIFFUSERS_API_TAG}" || diffusers="engine/diffusers-api:${DIFFUSERS_API_TAG}"
-      build_image "products/image-qwen-image-21-diffusers-48g" "product" "image-qwen-image-21-diffusers-48g" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_48G_TAG}" "${diffusers}"
+      build_image "products/image-qwen-image-21-diffusers-48g" "product" "image-qwen-image-21-diffusers-48g" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_48G_TAG}" "${diffusers}" "products"
       ;;
     products/image-qwen-image-21-diffusers-5090)
       local diffusers
       [[ -n "${IMAGE_REGISTRY}" ]] && diffusers="${IMAGE_REGISTRY}/engine/diffusers-api:${DIFFUSERS_API_TAG}" || diffusers="engine/diffusers-api:${DIFFUSERS_API_TAG}"
-      build_image "products/image-qwen-image-21-diffusers-5090" "product" "image-qwen-image-21-diffusers-5090" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_5090_TAG}" "${diffusers}"
+      build_image "products/image-qwen-image-21-diffusers-5090" "product" "image-qwen-image-21-diffusers-5090" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_5090_TAG}" "${diffusers}" "products"
       ;;
     products/image-qwen-image-21-comfyui-4090-24g)
       local comfy
       [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}" || comfy="engine/comfyui:${COMFYUI_REF}"
-      build_image "products/image-qwen-image-21-comfyui-4090-24g" "product" "image-qwen-image-21-comfyui-4090-24g" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_4090_24G_TAG}" "${comfy}"
+      build_image "products/image-qwen-image-21-comfyui-4090-24g" "product" "image-qwen-image-21-comfyui-4090-24g" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_4090_24G_TAG}" "${comfy}" "products"
       ;;
     products/image-qwen-image-21-comfyui-48g)
       local comfy
       [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}" || comfy="engine/comfyui:${COMFYUI_REF}"
-      build_image "products/image-qwen-image-21-comfyui-48g" "product" "image-qwen-image-21-comfyui-48g" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_48G_TAG}" "${comfy}"
+      build_image "products/image-qwen-image-21-comfyui-48g" "product" "image-qwen-image-21-comfyui-48g" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_48G_TAG}" "${comfy}" "products"
       ;;
     products/image-qwen-image-21-comfyui-5090)
       local comfy
       [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_REF}" || comfy="engine/comfyui:${COMFYUI_REF}"
-      build_image "products/image-qwen-image-21-comfyui-5090" "product" "image-qwen-image-21-comfyui-5090" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_5090_TAG}" "${comfy}"
+      build_image "products/image-qwen-image-21-comfyui-5090" "product" "image-qwen-image-21-comfyui-5090" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_5090_TAG}" "${comfy}" "products"
       ;;
     *)
       echo "ERROR: Unknown path '${path}'" >&2

@@ -16,8 +16,8 @@ ENV VARIANT=4090-24g \
     DEFAULT_HEIGHT=1024 \
     ENABLE_CPU_OFFLOAD=1
 
-COPY ../_qwen-image-21-shared/download_weights.sh /usr/local/bin/download_weights.sh
-COPY ../_qwen-image-21-shared/entrypoint-diffusers.sh /usr/local/bin/entrypoint-product.sh
+COPY _qwen-image-21-shared/download_weights.sh /usr/local/bin/download_weights.sh
+COPY _qwen-image-21-shared/entrypoint-diffusers.sh /usr/local/bin/entrypoint-product.sh
 RUN chmod +x /usr/local/bin/download_weights.sh /usr/local/bin/entrypoint-product.sh
 
 RUN mkdir -p /models /output /input

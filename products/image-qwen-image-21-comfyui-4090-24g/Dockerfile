@@ -21,8 +21,8 @@ RUN cd /opt/ComfyUI/custom_nodes && \
     cd ComfyUI-GGUF && \
     python -m pip install -r requirements.txt || true
 
-COPY ../_qwen-image-21-shared/download_weights.sh /usr/local/bin/download_weights.sh
-COPY ../_qwen-image-21-shared/entrypoint-comfyui.sh /usr/local/bin/entrypoint-product.sh
+COPY _qwen-image-21-shared/download_weights.sh /usr/local/bin/download_weights.sh
+COPY _qwen-image-21-shared/entrypoint-comfyui.sh /usr/local/bin/entrypoint-product.sh
 RUN chmod +x /usr/local/bin/download_weights.sh /usr/local/bin/entrypoint-product.sh
 
 RUN mkdir -p /models /output /input \
