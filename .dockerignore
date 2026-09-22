@@ -1,0 +1,53 @@
+# Git and version control
+.git
+.gitignore
+.gitattributes
+
+# Documentation and metadata
+README.md
+*.md
+LICENSE
+
+# CI/CD
+.github/
+
+# Development
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Model weights (NEVER include in image layers)
+*.safetensors
+*.ckpt
+*.pth
+*.bin
+*.pt
+*.gguf
+
+# Data directories
+data/
+models/
+weights/
+output/
+input/
+
+# Build artifacts
+ai-images-repo/
+.tmp/
+tmp/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

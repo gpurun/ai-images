@@ -1,0 +1,136 @@
+# =============================================================================
+# AI Images Catalog — registry of all deployable products
+# =============================================================================
+
+version: "1.0"
+registry: ghcr.io/gpurun
+
+bases:
+  - name: cuda-runtime
+    path: bases/cuda-runtime
+    tag: cu128
+    image: ghcr.io/gpurun/base/cuda-runtime:cu128
+    description: CUDA 12.8.1 + cuDNN runtime on Ubuntu 22.04
+    stack:
+      cuda: 12.8.1
+      os: ubuntu22.04
+
+  - name: python-ml
+    path: bases/python-ml
+    tag: cu128-py312
+    image: ghcr.io/gpurun/base/python-ml:cu128-py312
+    description: Python 3.12 + PyTorch 2.6.0 cu128
+    stack:
+      python: "3.12"
+      pytorch: 2.6.0
+      cuda: cu128
+    depends_on:
+      - cuda-runtime
+
+engines:
+  - name: comfyui
+    path: engines/comfyui
+    tag: v0.37.0
+    image: ghcr.io/gpurun/engine/comfyui:v0.37.0
+    description: ComfyUI v0.37.0 video/image workflow engine
+    framework: ComfyUI
+    version: 0.37.0
+    port: 8188
+    depends_on:
+      - python-ml
+
+  - name: vllm
+    path: engines/llm/vllm
+    tag: v0.8.5
+    image: ghcr.io/gpurun/engine/vllm:v0.8.5
+    description: vLLM 0.8.5 high-performance LLM inference
+    framework: vLLM
+    version: 0.8.5
+    port: 8000
+    depends_on:
+      - python-ml
+
+  - name: sglang
+    path: engines/llm/sglang
+    tag: v0.4.6
+    image: ghcr.io/gpurun/engine/sglang:v0.4.6
+    description: SGLang 0.4.6 structured generation LLM
+    framework: SGLang
+    version: 0.4.6
+    port: 30000
+    depends_on:
+      - python-ml
+
+products:
+  - name: video-minimax-h3-singularity
+    display_name: MiniMax H3 Singularity 视频生成
+    path: products/video-minimax-h3-singularity
+    tag: v1
+    image: ghcr.io/gpurun/product/video-minimax-h3-singularity:v1
+    description: |
+      MiniMax-H3 community fine-tune (WarmBloodAban) for text-to-video,
+      image-to-video, reference-to-video, and video-to-video generation.
+    category: video-generation
+    engine: comfyui
+    depends_on:
+      - comfyui
+    
+    model:
+      source: huggingface
+      repo: WarmBloodAban/Minimax-h3_Singularity
+      type: diffusion-transformer
+      task:
+        - text-to-video
+        - image-to-video
+        - reference-to-video
+        - video-to-video
+      default_checkpoint: Minimax-h3_Singularity_ref2va_v1.3_Pruned_w4a8.safetensors
+      checkpoint_size_gb: 11.0
+      
+      companions:
+        - repo: Comfy-Org/MiniMax-H3
+          files:
+            - text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors
+            - vae/minimax_h3_video_vae_fp16.safetensors
+            - vae/minimax_h3_audio_vae_fp32.safetensors
+    
+    ports:
+      - 8188
+    
+    volumes:
+      - /models    # Model weights storage
+      - /output    # Generated video output
+      - /input     # Input images/videos
+    
+    environment:
+      COMFYUI_PORT: 8188
+      WEIGHTS_ROOT: /models
+      HF_REPO: WarmBloodAban/Minimax-h3_Singularity
+      DIFFUSION_FILE: Minimax-h3_Singularity_ref2va_v1.3_Pruned_w4a8.safetensors
+      AUTO_DOWNLOAD_WEIGHTS: 0
+      HF_TOKEN: ""  # Optional, for gated models
+    
+    resources:
+      gpu: required
+      vram_min_gb: 24
+      recommended:
+        gpu: NVIDIA A100 / H100 / RTX 4090
+        vram_gb: 40+
+    
+    quickstart: |
+      docker run -d \
+        --name minimax-h3 \
+        --gpus all \
+        -p 8188:8188 \
+        -v $(pwd)/models:/models \
+        -v $(pwd)/output:/output \
+        -e AUTO_DOWNLOAD_WEIGHTS=1 \
+        -e HF_TOKEN=your_token \
+        ghcr.io/gpurun/product/video-minimax-h3-singularity:v1
+      
+      # Access ComfyUI at http://localhost:8188
+    
+    links:
+      model_card: https://huggingface.co/WarmBloodAban/Minimax-h3_Singularity
+      companion_models: https://huggingface.co/Comfy-Org/MiniMax-H3
+      comfyui: https://github.com/comfyanonymous/ComfyUI
