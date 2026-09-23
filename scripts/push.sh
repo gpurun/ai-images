@@ -60,6 +60,7 @@ push_bases() {
   echo "==> Pushing base images..."
   push_image "base" "cuda-runtime" "${BASE_CUDA_RUNTIME_TAG}"
   push_image "base" "python-ml" "${BASE_PYTHON_ML_TAG}"
+  push_image "base" "python-ml-cu129" "${BASE_PYTHON_ML_CU129_TAG}"
 }
 
 push_engines() {
@@ -68,11 +69,13 @@ push_engines() {
   push_image "engine" "vllm" "v${VLLM_VERSION}"
   push_image "engine" "sglang" "v${SGLANG_VERSION}"
   push_image "engine" "diffusers-api" "${DIFFUSERS_API_TAG}"
+  push_image "engine" "vdn-serve" "${ENGINE_VDN_SERVE_TAG}"
 }
 
 push_products() {
   echo "==> Pushing product images..."
   push_image "product" "video-minimax-h3-singularity" "${PRODUCT_VIDEO_MINIMAX_H3_SINGULARITY_TAG}"
+  push_image "product" "video-vdn-minimax-h3" "${PRODUCT_VIDEO_VDN_MINIMAX_H3_TAG}"
   
   # Qwen-Image-2.1 products
   push_image "product" "image-qwen-image-21-diffusers-4090-24g" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_4090_24G_TAG}"
@@ -93,6 +96,9 @@ push_single() {
     bases/python-ml)
       push_image "base" "python-ml" "${BASE_PYTHON_ML_TAG}"
       ;;
+    bases/python-ml-cu129)
+      push_image "base" "python-ml-cu129" "${BASE_PYTHON_ML_CU129_TAG}"
+      ;;
     engines/comfyui)
       push_image "engine" "comfyui" "${COMFYUI_TAG}"
       ;;
@@ -105,8 +111,14 @@ push_single() {
     engines/llm/sglang)
       push_image "engine" "sglang" "v${SGLANG_VERSION}"
       ;;
+    engines/vdn-serve)
+      push_image "engine" "vdn-serve" "${ENGINE_VDN_SERVE_TAG}"
+      ;;
     products/video-minimax-h3-singularity)
       push_image "product" "video-minimax-h3-singularity" "${PRODUCT_VIDEO_MINIMAX_H3_SINGULARITY_TAG}"
+      ;;
+    products/video-vdn-minimax-h3)
+      push_image "product" "video-vdn-minimax-h3" "${PRODUCT_VIDEO_VDN_MINIMAX_H3_TAG}"
       ;;
     products/image-qwen-image-21-diffusers-4090-24g)
       push_image "product" "image-qwen-image-21-diffusers-4090-24g" "${PRODUCT_QWEN_IMAGE_21_DIFFUSERS_4090_24G_TAG}"
