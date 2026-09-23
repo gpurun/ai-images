@@ -41,18 +41,29 @@ fi
 CMD=${1:-serve}
 SERVE_MODE=${SERVE_MODE:-sglang}
 
+# Determine model path: prefer local mounted/downloaded weights over HF hub
+MODEL_PATH_ARG="OpenVDN/vdn-minimax-h3"  # Default to HF hub
+if [ -d "${CKPT_DIR}/h3-base" ] && [ -d "${CKPT_DIR}/stage-dmd-step-250" ]; then
+    # Local layout detected (JuiceFS mount or downloaded weights)
+    MODEL_PATH_ARG="${CKPT_DIR}"
+    log_info "Using local checkpoint directory: ${CKPT_DIR}"
+else
+    log_warn "Local checkpoints not found, will use Hugging Face hub: ${MODEL_PATH_ARG}"
+    log_warn "For offline/JuiceFS usage, mount weights to ${CKPT_DIR} or set AUTO_DOWNLOAD_WEIGHTS=1"
+fi
+
 case "$CMD" in
     serve)
         case "$SERVE_MODE" in
             sglang)
                 log_info "Starting SGLang Diffusion server (optimal multi-GPU mode)"
-                log_info "Model: OpenVDN/vdn-minimax-h3"
+                log_info "Model path: ${MODEL_PATH_ARG}"
                 log_info "GPUs: ${NUM_GPUS}, Quantization: ${QUANTIZATION}, Attention: ${ATTENTION_BACKEND}"
                 log_info "Port: ${SGLANG_PORT}"
                 log_info ""
                 
                 exec sglang serve \
-                    --model-path OpenVDN/vdn-minimax-h3 \
+                    --model-path "${MODEL_PATH_ARG}" \
                     --num-gpus "${NUM_GPUS}" \
                     --quantization "${QUANTIZATION}" \
                     --attention-backend "${ATTENTION_BACKEND}" \
@@ -65,11 +76,12 @@ case "$CMD" in
             
             diffusers)
                 log_info "Starting Diffusers HTTP API server (24GB-friendly mode)"
-                log_info "Model: OpenVDN/vdn-minimax-h3 (ModularPipeline)"
+                log_info "Model path: ${MODEL_PATH_ARG}"
                 log_info "Port: ${DIFFUSERS_PORT}"
                 log_info ""
                 
                 exec python /opt/vdn/serve_diffusers.py \
+                    --model-path "${MODEL_PATH_ARG}" \
                     --port "${DIFFUSERS_PORT}" \
                     --host 0.0.0.0
                 ;;

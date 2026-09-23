@@ -37,6 +37,7 @@ app = FastAPI(
 # Global pipeline instance
 pipeline = None
 config = None
+MODEL_PATH_OVERRIDE = None
 
 
 class GenerateRequest(BaseModel):
@@ -66,8 +67,13 @@ def load_pipeline(
     offload_dit: bool = False,
     device: str = "cuda"
 ):
-    """Load VDN-H3 diffusers pipeline with optimizations"""
-    logger.info(f"Loading VDN-H3 pipeline: {model_path}, workflow={workflow}, fp8={fp8}, offload_dit={offload_dit}")
+    """Load VDN-H3 diffusers pipeline with optimizations
+    
+    Args:
+        model_path: HF hub id or local directory path to checkpoint
+    """
+    logger.info(f"Loading VDN-H3 pipeline from: {model_path}")
+    logger.info(f"  workflow={workflow}, fp8={fp8}, offload_dit={offload_dit}")
     
     pipe = ModularPipeline.from_pretrained(model_path, workflow=workflow)
     
@@ -122,7 +128,7 @@ async def startup_event():
     logger.info("=" * 80)
     
     # Parse config from environment
-    model_path = os.getenv("MODEL_PATH", "OpenVDN/vdn-minimax-h3")
+    model_path = MODEL_PATH_OVERRIDE or os.getenv("MODEL_PATH", "OpenVDN/vdn-minimax-h3")
     fp8 = os.getenv("QUANTIZATION", "fp8").lower() == "fp8"
     offload_dit = os.getenv("OFFLOAD_DIT", "0") == "1"
     device = os.getenv("DEVICE", "cuda")
@@ -235,9 +241,15 @@ async def download(filename: str):
 
 def main():
     parser = argparse.ArgumentParser(description="VDN-MiniMax-H3 Diffusers HTTP API Server")
+    parser.add_argument("--model-path", type=str, default="OpenVDN/vdn-minimax-h3", 
+                        help="Model path (HF hub id or local directory)")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Server host")
     parser.add_argument("--port", type=int, default=8000, help="Server port")
     args = parser.parse_args()
+    
+    # Store model path in global config (accessed by startup_event)
+    global MODEL_PATH_OVERRIDE
+    MODEL_PATH_OVERRIDE = args.model_path
     
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
 
