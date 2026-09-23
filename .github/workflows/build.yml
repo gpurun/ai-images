@@ -72,6 +72,12 @@ jobs:
             ./scripts/build.sh bases/python-ml
             ./scripts/build.sh engines/comfyui
             ./scripts/build.sh "${TARGET}"
+          elif [[ "${TARGET}" == "products/video-vdn-minimax-h3" ]]; then
+            echo "==> Building VDN-MiniMax-H3 product dependency chain"
+            ./scripts/build.sh bases/cuda-runtime
+            ./scripts/build.sh bases/python-ml-cu129
+            ./scripts/build.sh engines/vdn-serve
+            ./scripts/build.sh "${TARGET}"
           elif [[ "${TARGET}" == products/image-qwen-image-21-diffusers-* ]]; then
             echo "==> Building Qwen Diffusers product dependency chain"
             ./scripts/build.sh bases/cuda-runtime
@@ -101,6 +107,12 @@ jobs:
             ./scripts/push.sh bases/cuda-runtime
             ./scripts/push.sh bases/python-ml
             ./scripts/push.sh engines/comfyui
+            ./scripts/push.sh "${TARGET}"
+          elif [[ "${TARGET}" == "products/video-vdn-minimax-h3" ]]; then
+            echo "==> Pushing dependency chain for VDN-MiniMax-H3 product"
+            ./scripts/push.sh bases/cuda-runtime
+            ./scripts/push.sh bases/python-ml-cu129
+            ./scripts/push.sh engines/vdn-serve
             ./scripts/push.sh "${TARGET}"
           elif [[ "${TARGET}" == products/image-qwen-image-21-diffusers-* ]]; then
             echo "==> Pushing dependency chain for Qwen Diffusers product"
