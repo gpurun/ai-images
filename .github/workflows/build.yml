@@ -10,6 +10,7 @@ on:
       - 'products/**'
       - 'versions.env'
       - 'scripts/build.sh'
+      - 'scripts/push.sh'
       - '.github/workflows/build.yml'
   workflow_dispatch:
     inputs:
