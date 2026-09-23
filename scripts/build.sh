@@ -108,6 +108,14 @@ build_bases() {
     "python-ml" \
     "${BASE_PYTHON_ML_TAG}" \
     "${cuda_runtime_image}"
+
+  # python-ml-cu129 depends on cuda-runtime (for VDN-H3)
+  build_image \
+    "bases/python-ml-cu129" \
+    "base" \
+    "python-ml-cu129" \
+    "${BASE_PYTHON_ML_CU129_TAG}" \
+    "${cuda_runtime_image}"
 }
 
 build_engines() {
@@ -151,6 +159,21 @@ build_engines() {
     "diffusers-api" \
     "${DIFFUSERS_API_TAG}" \
     "${python_ml_image}"
+
+  # VDN serve engine (uses cu129 base)
+  local python_ml_cu129_image
+  if [[ -n "${IMAGE_REGISTRY}" ]]; then
+    python_ml_cu129_image="${IMAGE_REGISTRY}/base/python-ml-cu129:${BASE_PYTHON_ML_CU129_TAG}"
+  else
+    python_ml_cu129_image="base/python-ml-cu129:${BASE_PYTHON_ML_CU129_TAG}"
+  fi
+
+  build_image \
+    "engines/vdn-serve" \
+    "engine" \
+    "vdn-serve" \
+    "${ENGINE_VDN_SERVE_TAG}" \
+    "${python_ml_cu129_image}"
 }
 
 build_products() {
@@ -224,6 +247,21 @@ build_products() {
     "${PRODUCT_QWEN_IMAGE_21_COMFYUI_5090_TAG}" \
     "${comfyui_image}" \
     "products"
+
+  # VDN-MiniMax-H3 product (uses vdn-serve engine)
+  local vdn_serve_image
+  if [[ -n "${IMAGE_REGISTRY}" ]]; then
+    vdn_serve_image="${IMAGE_REGISTRY}/engine/vdn-serve:${ENGINE_VDN_SERVE_TAG}"
+  else
+    vdn_serve_image="engine/vdn-serve:${ENGINE_VDN_SERVE_TAG}"
+  fi
+
+  build_image \
+    "products/video-vdn-minimax-h3" \
+    "product" \
+    "video-vdn-minimax-h3" \
+    "${PRODUCT_VIDEO_VDN_MINIMAX_H3_TAG}" \
+    "${vdn_serve_image}"
 }
 
 build_single() {
@@ -237,6 +275,11 @@ build_single() {
       local cuda_rt
       [[ -n "${IMAGE_REGISTRY}" ]] && cuda_rt="${IMAGE_REGISTRY}/base/cuda-runtime:${BASE_CUDA_RUNTIME_TAG}" || cuda_rt="base/cuda-runtime:${BASE_CUDA_RUNTIME_TAG}"
       build_image "bases/python-ml" "base" "python-ml" "${BASE_PYTHON_ML_TAG}" "${cuda_rt}"
+      ;;
+    bases/python-ml-cu129)
+      local cuda_rt
+      [[ -n "${IMAGE_REGISTRY}" ]] && cuda_rt="${IMAGE_REGISTRY}/base/cuda-runtime:${BASE_CUDA_RUNTIME_TAG}" || cuda_rt="base/cuda-runtime:${BASE_CUDA_RUNTIME_TAG}"
+      build_image "bases/python-ml-cu129" "base" "python-ml-cu129" "${BASE_PYTHON_ML_CU129_TAG}" "${cuda_rt}"
       ;;
     engines/comfyui)
       local py_ml
@@ -252,6 +295,11 @@ build_single() {
       local py_ml
       [[ -n "${IMAGE_REGISTRY}" ]] && py_ml="${IMAGE_REGISTRY}/base/python-ml:${BASE_PYTHON_ML_TAG}" || py_ml="base/python-ml:${BASE_PYTHON_ML_TAG}"
       build_image "engines/llm/sglang" "engine" "sglang" "v${SGLANG_VERSION}" "${py_ml}"
+      ;;
+    engines/vdn-serve)
+      local py_ml_cu129
+      [[ -n "${IMAGE_REGISTRY}" ]] && py_ml_cu129="${IMAGE_REGISTRY}/base/python-ml-cu129:${BASE_PYTHON_ML_CU129_TAG}" || py_ml_cu129="base/python-ml-cu129:${BASE_PYTHON_ML_CU129_TAG}"
+      build_image "engines/vdn-serve" "engine" "vdn-serve" "${ENGINE_VDN_SERVE_TAG}" "${py_ml_cu129}"
       ;;
     products/video-minimax-h3-singularity)
       local comfy
@@ -292,6 +340,11 @@ build_single() {
       local comfy
       [[ -n "${IMAGE_REGISTRY}" ]] && comfy="${IMAGE_REGISTRY}/engine/comfyui:${COMFYUI_TAG}" || comfy="engine/comfyui:${COMFYUI_TAG}"
       build_image "products/image-qwen-image-21-comfyui-5090" "product" "image-qwen-image-21-comfyui-5090" "${PRODUCT_QWEN_IMAGE_21_COMFYUI_5090_TAG}" "${comfy}" "products"
+      ;;
+    products/video-vdn-minimax-h3)
+      local vdn_serve
+      [[ -n "${IMAGE_REGISTRY}" ]] && vdn_serve="${IMAGE_REGISTRY}/engine/vdn-serve:${ENGINE_VDN_SERVE_TAG}" || vdn_serve="engine/vdn-serve:${ENGINE_VDN_SERVE_TAG}"
+      build_image "products/video-vdn-minimax-h3" "product" "video-vdn-minimax-h3" "${PRODUCT_VIDEO_VDN_MINIMAX_H3_TAG}" "${vdn_serve}"
       ;;
     *)
       echo "ERROR: Unknown path '${path}'" >&2

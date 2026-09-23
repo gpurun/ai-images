@@ -27,6 +27,18 @@ bases:
     depends_on:
       - cuda-runtime
 
+  - name: python-ml-cu129
+    path: bases/python-ml-cu129
+    tag: cu129-py312-torch2.13
+    image: ghcr.io/gpurun/base/python-ml-cu129:cu129-py312-torch2.13
+    description: Python 3.12 + PyTorch 2.13.0 cu129 (for VDN-H3 and models requiring torch 2.13+)
+    stack:
+      python: "3.12"
+      pytorch: 2.13.0
+      cuda: cu129
+    depends_on:
+      - cuda-runtime
+
 engines:
   - name: comfyui
     path: engines/comfyui
@@ -71,6 +83,17 @@ engines:
     port: 8000
     depends_on:
       - python-ml
+
+  - name: vdn-serve
+    path: engines/vdn-serve
+    tag: v1
+    image: ghcr.io/gpurun/engine/vdn-serve:v1
+    description: VDN (Video DeltaNet) serve engine with SGLang Diffusion + Diffusers support
+    framework: SGLang + Diffusers
+    version: sglang[diffusion] + diffusers + FA4
+    port: 30010
+    depends_on:
+      - python-ml-cu129
 
 products:
   - name: video-minimax-h3-singularity
@@ -393,3 +416,85 @@ products:
     links:
       model_card: https://huggingface.co/Qwen/Qwen-Image-2.1
       comfyui: https://github.com/comfyanonymous/ComfyUI
+
+  - name: video-vdn-minimax-h3
+    display_name: VDN-MiniMax-H3 视频生成
+    path: products/video-vdn-minimax-h3
+    tag: v1
+    image: ghcr.io/gpurun/product/video-vdn-minimax-h3:v1
+    description: |
+      OpenVDN VDN-H3 (Video DeltaNet on MiniMax-H3) hybrid-attention video generation.
+      Dual-mode serving: SGLang Diffusion (optimal multi-GPU, 6.9s on 8×B200) + 
+      Diffusers API (24GB single-GPU friendly with offload). T2VA/I2VA/FL2VA/L2VA/Ref2VA-like.
+      PyTorch 2.13+cu129, FlashAttention 4 (optional, auto-fallback on Ampere/Ada/RTX 50).
+    category: video-generation
+    engine: vdn-serve
+    depends_on:
+      - vdn-serve
+    
+    model:
+      source: huggingface
+      repo: OpenVDN/vdn-minimax-h3
+      type: diffusion-transformer-hybrid-attention
+      task:
+        - text-to-video
+        - image-to-video
+        - keyframe-to-video
+        - reference-to-video
+      default_checkpoint: stage-dmd-step-250  # 8-step turbo (fastest)
+      checkpoint_size_gb: 82.0
+      
+      companions:
+        - repo: MiniMaxAI/MiniMax-H3
+          files:
+            - h3-base/transformer  # 66GB bf16
+            - h3-base/video_vae
+            - h3-base/audio_vae
+    
+    ports:
+      - 30010  # SGLang Diffusion
+      - 8000   # Diffusers HTTP API
+    
+    volumes:
+      - /models    # Model weights storage (~82GB)
+      - /output    # Generated video output
+      - /input     # Input images/videos
+    
+    environment:
+      SERVE_MODE: sglang  # sglang or diffusers
+      NUM_GPUS: 1
+      QUANTIZATION: fp8
+      ATTENTION_BACKEND: hybrid_window_attn_h3
+      SGLANG_PORT: 30010
+      DIFFUSERS_PORT: 8000
+      OFFLOAD_DIT: 0
+      AUTO_DOWNLOAD_WEIGHTS: 0
+      HF_TOKEN: ""  # Optional
+    
+    resources:
+      gpu: required
+      vram_min_gb: 24  # With Diffusers + offload
+      recommended:
+        gpu: NVIDIA H200 / B200 / A100-80GB / RTX 5090
+        vram_gb: 32+
+        multi_gpu: 8×B200 for 6.9s denoising (production optimal)
+    
+    quickstart: |
+      # SGLang mode (multi-GPU optimal)
+      docker run -d --gpus all -p 30010:30010 \
+        -v $(pwd)/models:/models \
+        -e SERVE_MODE=sglang -e NUM_GPUS=8 -e AUTO_DOWNLOAD_WEIGHTS=1 \
+        ghcr.io/gpurun/product/video-vdn-minimax-h3:v1
+      
+      # Diffusers mode (24GB single-GPU)
+      docker run -d --gpus all -p 8000:8000 \
+        -v $(pwd)/models:/models \
+        -e SERVE_MODE=diffusers -e OFFLOAD_DIT=1 -e AUTO_DOWNLOAD_WEIGHTS=1 \
+        ghcr.io/gpurun/product/video-vdn-minimax-h3:v1
+    
+    links:
+      model_card: https://huggingface.co/OpenVDN/vdn-minimax-h3
+      code: https://github.com/OpenVDN/vdn-minimax-h3
+      paper: https://arxiv.org/abs/2609.20744
+      blog: https://openvdn.github.io/
+      license: MiniMax H3 Community License Agreement
