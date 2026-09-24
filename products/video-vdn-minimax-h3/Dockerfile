@@ -36,7 +36,7 @@ RUN git config --global user.email "builder@gpurun.com" \
     && git config --global user.name "GPURun Builder" \
     && git clone --depth 1 https://github.com/OpenVDN/vdn-minimax-h3.git vdn \
     && cd vdn \
-    && bash scripts/setup_diffusers.sh \
+    && PIP="uv pip --system" bash scripts/setup_diffusers.sh \
     && uv pip install --system -e .
 
 # Copy product scripts
