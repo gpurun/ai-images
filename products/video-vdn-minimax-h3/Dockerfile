@@ -38,8 +38,7 @@ RUN git config --global user.email "builder@gpurun.com" \
     && git clone --depth 1 https://github.com/OpenVDN/vdn-minimax-h3.git vdn \
     && cd vdn \
     && PIN=$(sed -n 's/^upstream base: \([0-9a-f]*\).*/\1/p' diffusers_patches/BASE.txt) \
-    && git clone --quiet https://github.com/huggingface/diffusers.git diffusers \
-    && git -C diffusers fetch --quiet origin "$PIN" \
+    && git clone https://github.com/huggingface/diffusers.git diffusers \
     && git -C diffusers checkout --quiet --detach "$PIN" \
     && git -C diffusers am --quiet "$PWD"/diffusers_patches/*.patch \
     && echo "diffusers: $PIN + $(ls diffusers_patches/*.patch | wc -l) patches applied" \
