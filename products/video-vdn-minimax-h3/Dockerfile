@@ -32,7 +32,9 @@ ENV MODEL_PATH=/models \
 
 # Install VDN-H3 repository + diffusers patches
 WORKDIR /opt
-RUN git clone --depth 1 https://github.com/OpenVDN/vdn-minimax-h3.git vdn \
+RUN git config --global user.email "builder@gpurun.com" \
+    && git config --global user.name "GPURun Builder" \
+    && git clone --depth 1 https://github.com/OpenVDN/vdn-minimax-h3.git vdn \
     && cd vdn \
     && bash scripts/setup_diffusers.sh \
     && uv pip install --system -e .
