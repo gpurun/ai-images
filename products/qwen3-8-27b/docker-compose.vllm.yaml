@@ -1,0 +1,15 @@
+name: qwen3-8-27b-vllm
+services:
+  qwen3-8-27b-vllm:
+    build: {context: ../.., dockerfile: products/qwen3-8-27b/Dockerfile, args: {ENGINE: vllm, TAG: latest}}
+    image: ai-images/qwen3-8-27b:vllm-latest
+    container_name: qwen3-8-27b-vllm
+    restart: unless-stopped
+    ports: ["${VLLM_PORT:-8000}:8000"]
+    environment: [HF_TOKEN=${HF_TOKEN}, HF_HOME=/root/.cache/huggingface, TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers, VLLM_USE_V1=1]
+    volumes: ["${HF_CACHE_DIR:-~/.cache/huggingface}:/root/.cache/huggingface"]
+    ipc: host
+    shm_size: ${SHM_SIZE:-64g}
+    ulimits: {memlock: -1, stack: 67108864}
+    deploy: {resources: {reservations: {devices: [{driver: nvidia, count: all, capabilities: [gpu]}]}}}
+    command: [${MODEL_PATH:-Qwen/Qwen3-8B}, --served-model-name, ${SERVED_MODEL_NAME:-Qwen3-8B}, --host, ${HOST:-0.0.0.0}, --port, "8000", --tensor-parallel-size, "${TP_SIZE:-1}", --gpu-memory-utilization, "${GPU_MEMORY_UTILIZATION:-0.90}", --max-model-len, "${CONTEXT_LENGTH:-131072}", --max-num-seqs, "${MAX_NUM_SEQS:-256}", --max-num-batched-tokens, "${MAX_NUM_BATCHED_TOKENS:-32768}", --block-size, "${BLOCK_SIZE:-128}", --kv-cache-dtype, "${KV_CACHE_DTYPE:-fp8_e4m3}", --attention-backend, "${VLLM_ATTENTION_BACKEND:-FLASH_ATTN}", --reasoning-parser, ${REASONING_PARSER:-qwen3}, --enable-auto-tool-choice, --tool-call-parser, ${TOOL_CALL_PARSER:-qwen3}, --default-chat-template-kwargs, "{\"enable_thinking\":true}", --compilation-config, "{\"cudagraph_mode\":\"${VLLM_CUDAGRAPH_MODE:-PIECEWISE}\"}", ${DISABLE_LOG_REQUESTS:+--disable-log-requests}]

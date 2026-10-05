@@ -573,3 +573,28 @@ products:
       sglang: products/glm-5.3/docker-compose.sglang.yaml
       vllm: products/glm-5.3/docker-compose.vllm.yaml
     env_example: products/glm-5.3/.env.example
+
+  - id: qwen3-8-27b
+    name: Qwen3-8-27B
+    vendor: qwen
+    family: qwen3
+    variant: general
+    arch: Transformer
+    params: 8B-32B
+    active_params: varies
+    precision: fp8
+    context: 131072
+    license: Apache-2.0
+    description: "Qwen3 family 8B/14B/32B serving template with SGLang/vLLM, configurable via MODEL_PATH/TP_SIZE."
+    engines:
+      - sglang
+      - vllm
+    tags: [qwen, qwen3, 8b, 14b, 32b, reasoning, fp8]
+    model: Qwen/Qwen3-8B
+    served_name: Qwen3-8B
+    products_dir: products/qwen3-8-27b
+    readme: products/qwen3-8-27b/README.md
+    compose:
+      sglang: products/qwen3-8-27b/docker-compose.sglang.yaml
+      vllm: products/qwen3-8-27b/docker-compose.vllm.yaml
+    env_example: products/qwen3-8-27b/.env.example
