@@ -301,6 +301,38 @@ docker exec -it vdn-h3 bash
 
 **注意**: FlashAttention 4 仅在 Hopper 和数据中心 Blackwell 使用；Ampere/Ada/RTX 50 系列自动回退到 PyTorch 或 FlexAttention Triton 内核，**无需 FA4 也能正常运行**。
 
+### GPU 卡型与数量汇总
+
+| 部署模式 | GPU 型号 | 显存（单卡） | 数量 | 并行（NUM_GPUS） | 说明 |
+|---|---|---|---|---|---|
+| Diffusers 模式（最低） | RTX 4090 / A6000 | 24 GB | **1 卡** | – | offload 峰值约 22GB |
+| Diffusers 模式 | RTX 5090 | 32 GB | **1 卡** | – | 支持 345 帧 |
+| SGLang 单卡 | H200 / A100-80GB / RTX 5090 | 32 GB+ | **1 卡** | `NUM_GPUS=1` | FP8 推荐 |
+| SGLang 多卡 | B200 | 180 GB | **2 / 4 / 8 卡** | `NUM_GPUS=2/4/8` | `8` 卡最快（6.9s/8步） |
+| SGLang 多卡 | H200 | 141 GB | **8 卡** | `NUM_GPUS=8` | 生产环境入门多卡配置 |
+
+### 系统硬件要求
+
+| 项目 | 要求 | 说明 |
+|---|---|---|
+| CPU | 8 核以上（推荐 16 核） | 视频编解码与预处理 |
+| 内存（RAM） | >= 32 GB（多卡/生产推荐 64 GB+） | 权重加载与张量缓冲 |
+| 系统盘 | >= 60 GB（可用） | 容器镜像、日志 |
+| 数据盘（模型缓存） | >= 100 GB（可用） | 权重约 60–90GB |
+| 共享内存（SHM） | >= 32 GB（推荐 64 GB） | `--shm-size=64g` |
+| PCIe/NVLink | 多卡强烈推荐 NVLink/InfiniBand | SGLang 多卡跨卡通信 |
+
+### 环境要求
+
+| 项目 | 推荐版本 | 说明 |
+|---|---|---|
+| 操作系统 | Ubuntu 22.04 LTS / 24.04 LTS | Linux 环境最佳 |
+| NVIDIA 驱动 | >= 535.129.03（Hopper/Blackwell 推荐 >= 550/570.xx） | 支持 CUDA 12.8 与 FP8 |
+| CUDA | 12.8.x | FA4 路径需 Hopper/数据中心 Blackwell |
+| Docker | >= 24.0 | 容器运行时 |
+| NVIDIA Container Toolkit | >= 1.15.0 | GPU 透传 |
+| 网络 | 稳定（高速） | 首次下载权重约 60–90GB |
+
 ## 🎨 使用示例
 
 ### T2VA（文本生成视频）

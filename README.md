@@ -94,6 +94,8 @@ export IMAGE_REGISTRY=ghcr.io/gpurun
 | `products/qwen3-8-27b`（模板） | `Qwen/Qwen3-8B/14B/32B` | 8–32B | FP8/W4A16 | **8B：1×24GB+；14B：1×48GB+；32B：2×80GB（或 4 卡）** | 20–70 GB | 32–64 GB | 模板化，按 `MODEL_PATH`、`TP_SIZE` 配置 |
 | `products/qwen3.8-flash-next` | `Qwen/Qwen3.8-Flash-Next` | 8B | FP8 | **1×24GB+（推荐 32GB）** | >= 20 GB | 32–64 GB | 轻量高效，单卡首选 |
 | `products/video-minimax-h3-singularity` | MiniMax H3（ComfyUI） | 视频生成工作流 | – | **1×24GB+（推荐 32GB；生产建议 A100-80GB/H100）** | >= 80 GB | 16–32 GB | 显存随分辨率/帧数动态变化 |
+| `products/video-vdn-minimax-h3` | OpenVDN VDN-H3（SGLang Diffusion / Diffusers） | 视频生成 | FP8/BF16 | **最低 1×24GB（RTX 4090）；推荐 1×32GB+（H200/A100-80GB/RTX 5090）；生产 2/4/8×B200（NUM_GPUS）** | >= 100 GB | 32–64 GB | 双模式推理，8×B200 最快（6.9s/8步） |
+| `products/image-qwen-image-21-*`（6 SKU） | `Qwen/Qwen-Image-2.1` | 扩散模型（T2I/编辑） | FP16/FP8/BF16/GGUF | **均单卡**：4090-24g→1×RTX 4090 24GB；5090→1×RTX 5090 32GB；48g→1×A100/H100 80GB（48GB+） | >= 40–60 GB | 16–32 GB | 2 种运行时（ComfyUI/Diffusers API）× 3 种显存规格 |
 
 ### 通用环境要求
 
@@ -108,7 +110,16 @@ export IMAGE_REGISTRY=ghcr.io/gpurun
 | 内存（RAM） | 32–256 GB（按对应模型选择） |
 | 网络 | 稳定（首次下载模型需高速网络） |
 
-各产品详细说明：[deepseek-v4.1-flash](products/deepseek-v4.1-flash/README.md) · [glm-5.3-flash](products/glm-5.3-flash/README.md) · [glm-5.3](products/glm-5.3/README.md) · [qwen3-8-27b](products/qwen3-8-27b/README.md) · [qwen3.8-flash-next](products/qwen3.8-flash-next/README.md) · [video-minimax-h3-singularity](products/video-minimax-h3-singularity/README.md)
+各产品详细说明：[deepseek-v4.1-flash](products/deepseek-v4.1-flash/README.md) · [glm-5.3-flash](products/glm-5.3-flash/README.md) · [glm-5.3/](products/glm-5.3/README.md) · [qwen3-8-27b](products/qwen3-8-27b/README.md) · [qwen3.8-flash-next](products/qwen3.8-flash-next/README.md) · [video-minimax-h3-singularity](products/video-minimax-h3-singularity/README.md) · [video-vdn-minimax-h3](products/video-vdn-minimax-h3/README.md) · [Qwen-Image-2.1 共享文档](products/_qwen-image-21-shared/README.md)
+
+### 基础/引擎层镜像要求
+
+基础镜像与引擎镜像本身不绑定模型，要求随最终产品而定；构建阶段通用要求如下：
+
+| 层级 | 路径 | 构建环境要求 | 运行硬件说明 |
+|---|---|---|---|
+| 基础镜像 | `bases/cuda-runtime`、`bases/python-ml`、`bases/python-ml-cu129` | CPU x86_64、>= 20GB 磁盘、无需 GPU | 运行时需与目标 GPU 匹配的 NVIDIA 驱动（>= 535.xx） |
+| 引擎镜像 | `engines/llm`（SGLang/vLLM）、`engines/comfyui`、`engines/diffusers-api`、`engines/vdn-serve` | 同上 + >= 60GB 磁盘（源码编译内核时更耗时） | 按所部署模型的卡型/数量要求执行（见上方汇总表） |
 
 ## 🎬 产品镜像：MiniMax H3 Singularity
 
