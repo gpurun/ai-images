@@ -598,3 +598,28 @@ products:
       sglang: products/qwen3-8-27b/docker-compose.sglang.yaml
       vllm: products/qwen3-8-27b/docker-compose.vllm.yaml
     env_example: products/qwen3-8-27b/.env.example
+
+  - id: qwen3.8-flash-next
+    name: Qwen3.8-Flash-Next
+    vendor: qwen
+    family: qwen3
+    variant: flash-next
+    arch: Transformer
+    params: 8B
+    active_params: 8B
+    precision: fp8
+    context: 131072
+    license: Apache-2.0
+    description: "Qwen3.8-Flash-Next serving template with SGLang/vLLM (aligned with project standards)."
+    engines:
+      - sglang
+      - vllm
+    tags: [qwen, qwen3, flash-next, fp8, 8b]
+    model: Qwen/Qwen3.8-Flash-Next
+    served_name: Qwen3.8-Flash-Next
+    products_dir: products/qwen3.8-flash-next
+    readme: products/qwen3.8-flash-next/README.md
+    compose:
+      sglang: products/qwen3.8-flash-next/docker-compose.sglang.yaml
+      vllm: products/qwen3.8-flash-next/docker-compose.vllm.yaml
+    env_example: products/qwen3.8-flash-next/.env.example

@@ -1,0 +1,15 @@
+name: qwen3.8-flash-next-sglang
+services:
+  qwen3.8-flash-next-sglang:
+    build: {context: ../.., dockerfile: products/qwen3.8-flash-next/Dockerfile, args: {ENGINE: sglang, TAG: latest}}
+    image: ai-images/qwen3.8-flash-next:sglang-latest
+    container_name: qwen3.8-flash-next-sglang
+    restart: unless-stopped
+    ports: ["${SGLANG_PORT:-30000}:30000"]
+    environment: [HF_TOKEN=${HF_TOKEN}, HF_HOME=/root/.cache/huggingface, TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers]
+    volumes: ["${HF_CACHE_DIR:-~/.cache/huggingface}:/root/.cache/huggingface"]
+    ipc: host
+    shm_size: ${SHM_SIZE:-64g}
+    ulimits: {memlock: -1, stack: 67108864}
+    deploy: {resources: {reservations: {devices: [{driver: nvidia, count: all, capabilities: [gpu]}]}}}
+    command: [--model-path, ${MODEL_PATH:-Qwen/Qwen3.8-Flash-Next}, --served-model-name, ${SERVED_MODEL_NAME:-Qwen3.8-Flash-Next}, --host, ${HOST:-0.0.0.0}, --port, "30000", --tp-size, "${TP_SIZE:-1}", --context-length, "${CONTEXT_LENGTH:-131072}", --max-running-requests, "${MAX_RUNNING_REQUESTS:-256}", --max-prefill-tokens, "${MAX_PREFILL_TOKENS:-32768}", --chunked-prefill-size, "${CHUNKED_PREFILL_SIZE:-8192}", --mem-fraction-static, "${MEM_FRACTION_STATIC:-0.90}", --kv-cache-dtype, "${KV_CACHE_DTYPE:-fp8_e4m3}", --reasoning-parser, ${REASONING_PARSER:-qwen3}, --tool-call-parser, ${TOOL_CALL_PARSER:-qwen3}, --enable-metrics, ${DISABLE_LOG_REQUESTS:+--disable-log-requests}, --log-level, ${LOG_LEVEL:-info}]
