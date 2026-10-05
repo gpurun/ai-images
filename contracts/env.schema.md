@@ -104,6 +104,39 @@ docker run <image> <custom_command> [args...]
 
 **端口**: `30000` (OpenAI-compatible API)
 
+### Ollama
+基于 `engine/ollama` 的产品镜像必须实现：
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `OLLAMA_PORT` | `11434` | Ollama API 服务端口 |
+| `OLLAMA_MODEL` | 产品特定 | 对外服务的模型名 (API 中的 model id) |
+| `OLLAMA_PULL` | 产品特定 | 启动时拉取源 (registry tag 或 `hf.co/<repo>:<quant>`；与 `OLLAMA_MODEL` 不同则自动 `ollama create` 别名) |
+| `GGUF_PATH` | - | 本地 GGUF 文件或目录 (优先级最高，任何模式下都会被 `ollama create`) |
+| `OLLAMA_CONTEXT_LENGTH` | `131072` | 默认 128K 长上下文，可按模型能力上调 (最高 1048576) |
+| `OLLAMA_KV_CACHE_TYPE` | `q8_0` | KV cache 量化 (q8_0 ≈ f16 的 1/4 显存，长上下文必备) |
+| `OLLAMA_FLASH_ATTENTION` | `1` | FlashAttention 加速 (0/1) |
+| `OLLAMA_NUM_PARALLEL` | `4` | 并行请求数 |
+| `OLLAMA_MAX_LOADED_MODELS` | `1` | 常驻加载模型数 (性能默认，避免重复加载) |
+| `OLLAMA_KEEP_ALIVE` | `-1` | 模型常驻不卸载 (秒数或 `-1`) |
+| `OLLAMA_MODELS` | `/models/ollama` | 模型存储目录 (卷挂载) |
+| `AUTO_DOWNLOAD_WEIGHTS` | `0` | 是否允许联网拉取 (0/1)；`download` 模式强制执行 |
+
+**端口**: `11434` (Ollama HTTP API，兼容 `/api/generate`、`/api/chat`；OpenAI 兼容端点 `/v1/*` 自 v0.5+ 可用)
+
+**卷挂载**: `${MODELS_DIR:-./models}:/models` (模型与 gguf 缓存持久化)
+
+**Entrypoint 模式**:
+```bash
+docker run <image>              # 默认 serve：后台起 ollama serve → 确保模型就绪 → 前台等待
+docker run <image> serve        # 同上 (显式)
+docker run <image> download     # 强制拉取/创建模型后退出 (init 容器预热，无需 AUTO_DOWNLOAD_WEIGHTS)
+docker run <image> bash         # 交互式 shell
+docker run <image> <cmd>        # 透传自定义命令
+```
+
+**性能/长上下文约定**: 引擎镜像必须以 `OLLAMA_FLASH_ATTENTION=1` + `OLLAMA_KV_CACHE_TYPE=q8_0` 构建默认值；产品 compose 必须持久化 `/models` 并设置 `OLLAMA_KEEP_ALIVE=-1`。
+
 ### LLM 健康检查
 ```yaml
 healthcheck:
@@ -113,6 +146,16 @@ healthcheck:
   retries: 3
   start_period: 120s
 ```
+
+> Ollama 基础镜像不含 `curl`，healthcheck 必须改用：
+> ```yaml
+> healthcheck:
+>   test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
+>   interval: 30s
+>   timeout: 10s
+>   retries: 3
+>   start_period: 180s
+> ```
 
 ## 📦 权重管理策略
 
@@ -154,6 +197,7 @@ healthcheck:
 ### 构建顺序
 ```
 base/cuda-runtime  →  base/python-ml  →  engine/{comfyui,vllm,sglang}  →  product/*
+base/ollama (独立) →  engine/ollama (FROM ollama/ollama，不依赖 python-ml)  →  product/*
 ```
 
 ### ARG 传递
@@ -180,6 +224,10 @@ curl -f http://localhost:8188/system_stats
 
 # vLLM / SGLang
 curl -f http://localhost:<port>/health
+
+# Ollama (基础镜像无 curl)
+docker exec <container> ollama list
+curl -f http://localhost:11434/api/version   # 宿主机侧
 ```
 
 ### 权重挂载测试

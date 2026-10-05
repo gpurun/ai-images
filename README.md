@@ -13,7 +13,8 @@
 │   ├── comfyui/            # ComfyUI >= 0.30.0 (图像/视频工作流)
 │   └── llm/                # LLM 推理引擎
 │       ├── vllm/           # vLLM 高性能推理
-│       └── sglang/         # SGLang 结构化生成
+│       ├── sglang/         # SGLang 结构化生成
+│       └── ollama/         # Ollama GGUF（FA + q8_0 KV Cache）
 │
 ├── products/               # 可部署产品镜像
 │   └── video-minimax-h3-singularity/  # MiniMax H3 视频生成
@@ -37,6 +38,7 @@
 ### 推理引擎版本
 - **vLLM**: 0.8.5
 - **SGLang**: 0.4.6
+- **Ollama**: 0.35.1（GGUF 引擎，默认 FlashAttention + `q8_0` KV Cache + 128K 上下文，可上调 1M）
 
 ## 🚀 快速开始
 
@@ -54,6 +56,10 @@
 # 构建单个镜像
 ./scripts/build.sh bases/cuda-runtime
 ./scripts/build.sh products/video-minimax-h3-singularity
+
+# 按引擎构建 LLM 产品（sglang | vllm | ollama）
+ENGINE=ollama ./scripts/build.glm-5.3-flash.sh
+ENGINE=vllm   ./scripts/build.glm-5.3-flash.sh
 ```
 
 ### 推送到 GitHub Container Registry
@@ -73,7 +79,7 @@ export IMAGE_REGISTRY=ghcr.io/gpurun
 
 ### GHCR 完整路径
 - **基础镜像**: `ghcr.io/gpurun/base/{cuda-runtime,python-ml}:<tag>`
-- **引擎镜像**: `ghcr.io/gpurun/engine/{comfyui,vllm,sglang}:<tag>`
+- **引擎镜像**: `ghcr.io/gpurun/engine/{comfyui,vllm,sglang,ollama}:<tag>`
 - **产品镜像**: `ghcr.io/gpurun/product/<product-name>:<tag>`
 
 ### 本地开发标签
@@ -119,7 +125,7 @@ export IMAGE_REGISTRY=ghcr.io/gpurun
 | 层级 | 路径 | 构建环境要求 | 运行硬件说明 |
 |---|---|---|---|
 | 基础镜像 | `bases/cuda-runtime`、`bases/python-ml`、`bases/python-ml-cu129` | CPU x86_64、>= 20GB 磁盘、无需 GPU | 运行时需与目标 GPU 匹配的 NVIDIA 驱动（>= 535.xx） |
-| 引擎镜像 | `engines/llm`（SGLang/vLLM）、`engines/comfyui`、`engines/diffusers-api`、`engines/vdn-serve` | 同上 + >= 60GB 磁盘（源码编译内核时更耗时） | 按所部署模型的卡型/数量要求执行（见上方汇总表） |
+| 引擎镜像 | `engines/llm`（SGLang/vLLM/Ollama）、`engines/comfyui`、`engines/diffusers-api`、`engines/vdn-serve` | 同上 + >= 60GB 磁盘（源码编译内核时更耗时） | 按所部署模型的卡型/数量要求执行（见上方汇总表） |
 
 ## 🎬 产品镜像：MiniMax H3 Singularity
 

@@ -77,6 +77,20 @@ docker compose -f docker-compose.sglang.yaml up -d --build
 docker compose -f docker-compose.vllm.yaml up -d --build
 ```
 
+### Ollama（Docker Compose，GGUF 长上下文）
+
+```bash
+# 默认：FlashAttention + q8_0 KV Cache + 128K 上下文 + 模型常驻
+docker compose -f docker-compose.ollama.yaml up -d --build
+```
+
+首次拉取权重（官方库仅 `glm-5.3-flash:cloud` 云端标签；本地推荐 HF GGUF）：
+
+```bash
+OLLAMA_PULL=hf.co/unsloth/GLM-5.3-Flash-GGUF:UD-Q4_K_XL AUTO_DOWNLOAD_WEIGHTS=1 \
+  docker compose -f docker-compose.ollama.yaml run --rm glm-5-3-flash-ollama download
+```
+
 ## 6. 验证
 
 ```bash
@@ -84,6 +98,9 @@ docker compose -f docker-compose.vllm.yaml up -d --build
 curl http://127.0.0.1:30000/v1/models
 # vLLM（端口 8000）
 curl http://127.0.0.1:8000/v1/models
+# Ollama（端口 11434）
+curl http://127.0.0.1:11434/api/version
+curl http://127.0.0.1:11434/v1/models
 ```
 
 ## 7. 关键说明
@@ -91,3 +108,4 @@ curl http://127.0.0.1:8000/v1/models
 - SGLang：推荐开启 `deep_gemm` + `trtllm`（DSA Prefill/Decode）以跑通混合注意力（KDA+DSA）
 - vLLM：使用 `FLASH_ATTN_MLA_SPARSE` Attention Backend 配合最新构建以获得 Sparse MLA/NoPE 路径支持
 - 1M 长上下文：需按显存调整并发、`max-prefill-tokens`、`chunked-prefill-size`
+- Ollama：GGUF 量化 + `q8_0` KV Cache，默认 128K 上下文可上调至 1M（`OLLAMA_CONTEXT_LENGTH`）；`ollama create` 导入 GGUF 首次约需 2 倍权重磁盘；高并发生产仍推荐 SGLang/vLLM

@@ -68,6 +68,7 @@ build_image() {
   [[ -n "${TORCH_INDEX_URL:-}" ]] && build_args+=(--build-arg "TORCH_INDEX_URL=${TORCH_INDEX_URL}")
   [[ -n "${VLLM_VERSION:-}" ]] && build_args+=(--build-arg "VLLM_VERSION=${VLLM_VERSION}")
   [[ -n "${SGLANG_VERSION:-}" ]] && build_args+=(--build-arg "SGLANG_VERSION=${SGLANG_VERSION}")
+  [[ -n "${OLLAMA_VERSION:-}" ]] && build_args+=(--build-arg "OLLAMA_VERSION=${OLLAMA_VERSION}")
   [[ -n "${COMFYUI_REF:-}" ]] && build_args+=(--build-arg "COMFYUI_REF=${COMFYUI_REF}")
 
   # Override base image if dependency provided
@@ -151,6 +152,14 @@ build_engines() {
     "sglang" \
     "v${SGLANG_VERSION}" \
     "${python_ml_image}"
+
+  # Ollama engine (self-contained: FROM ollama/ollama, no python-ml base)
+  build_image \
+    "engines/llm/ollama" \
+    "engine" \
+    "ollama" \
+    "v${OLLAMA_VERSION}" \
+    ""
 
   # Diffusers API engine
   build_image \
@@ -295,6 +304,9 @@ build_single() {
       local py_ml
       [[ -n "${IMAGE_REGISTRY}" ]] && py_ml="${IMAGE_REGISTRY}/base/python-ml:${BASE_PYTHON_ML_TAG}" || py_ml="base/python-ml:${BASE_PYTHON_ML_TAG}"
       build_image "engines/llm/sglang" "engine" "sglang" "v${SGLANG_VERSION}" "${py_ml}"
+      ;;
+    engines/llm/ollama)
+      build_image "engines/llm/ollama" "engine" "ollama" "v${OLLAMA_VERSION}" ""
       ;;
     engines/vdn-serve)
       local py_ml_cu129

@@ -9,7 +9,7 @@ FROM ${REGISTRY}${REPO}engines/llm:${ENGINE}-deepseek-v4.1-flash-${TAG} AS engin
 FROM engine
 
 LABEL org.opencontainers.image.title="DeepSeek-V4.1-Flash" \
-      org.opencontainers.image.description="DeepSeek-V4.1-Flash (671B MoE, MLA, FP8) serving image (SGLang/vLLM selectable)" \
+      org.opencontainers.image.description="DeepSeek-V4.1-Flash (671B MoE, MLA, FP8) serving image (SGLang/vLLM/Ollama selectable)" \
       org.opencontainers.image.source="https://github.com/deepseek-ai/DeepSeek-V4.1" \
       org.opencontainers.image.vendor="ai-images" \
       ai-images.model="deepseek-ai/DeepSeek-V4.1" \

@@ -81,6 +81,20 @@ docker compose -f docker-compose.sglang.yaml up -d --build
 docker compose -f docker-compose.vllm.yaml up -d --build
 ```
 
+### Ollama（Docker Compose，GGUF 长上下文）
+
+```bash
+# 默认：FlashAttention + q8_0 KV Cache + 128K 上下文 + 模型常驻
+docker compose -f docker-compose.ollama.yaml up -d --build
+```
+
+首次拉取权重（官方库仅 `deepseek-v4.1-flash:cloud` 云端标签；本地请用 HF GGUF，或挂载 `GGUF_PATH` 指向已有 .gguf）：
+
+```bash
+OLLAMA_PULL=hf.co/vcruz305/DeepSeek-V4.1-Flash-GGUF:Q3_K_M AUTO_DOWNLOAD_WEIGHTS=1 \
+  docker compose -f docker-compose.ollama.yaml run --rm deepseek-v4-1-flash-ollama download
+```
+
 ## 6. 验证
 
 ```bash
@@ -89,6 +103,10 @@ curl http://127.0.0.1:30000/v1/models
 
 # vLLM
 curl http://127.0.0.1:8000/v1/models
+
+# Ollama（端口 11434）
+curl http://127.0.0.1:11434/api/version
+curl http://127.0.0.1:11434/v1/models
 ```
 
 ## 7. 注意事项
@@ -97,3 +115,4 @@ curl http://127.0.0.1:8000/v1/models
 - SGLang 推荐 `flashmla` + `deep_gemm`；vLLM 推荐 `FLASH_ATTN_MLA` + `PIECEWISE` CUDA Graphs
 - 1M 上下文+高并发容易出现 CUDA Graph Capture OOM，建议降低并发或 Prefill 批次
 - 生产环境建议锁定引擎（sglang/sgl-kernel/vllm）的 commit SHA 以保证可复现性
+- Ollama：GGUF 量化 + `q8_0` KV Cache，默认 128K 上下文可上调至 1M（`OLLAMA_CONTEXT_LENGTH`）；`ollama create` 导入 GGUF 首次约需 2 倍权重磁盘；高并发生产仍推荐 SGLang/vLLM

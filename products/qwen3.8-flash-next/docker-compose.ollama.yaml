@@ -1,0 +1,29 @@
+name: qwen3.8-flash-next-ollama
+services:
+  qwen3.8-flash-next-ollama:
+    build: {context: ../.., dockerfile: products/qwen3.8-flash-next/Dockerfile, args: {ENGINE: ollama, TAG: latest}}
+    image: ai-images/qwen3.8-flash-next:ollama-latest
+    container_name: qwen3.8-flash-next-ollama
+    restart: unless-stopped
+    ports: ["${OLLAMA_PORT:-11434}:11434"]
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_CONTEXT_LENGTH=${OLLAMA_CONTEXT_LENGTH:-131072}
+      - OLLAMA_KV_CACHE_TYPE=${OLLAMA_KV_CACHE_TYPE:-q8_0}
+      - OLLAMA_FLASH_ATTENTION=${OLLAMA_FLASH_ATTENTION:-1}
+      - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL:-4}
+      - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS:-1}
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:--1}
+      - OLLAMA_MODELS=/models/ollama
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3.8-flash-next}
+      - OLLAMA_PULL=${OLLAMA_PULL:-}
+      - GGUF_PATH=${GGUF_PATH:-}
+      - AUTO_DOWNLOAD_WEIGHTS=${AUTO_DOWNLOAD_WEIGHTS:-0}
+      - HF_TOKEN=${HF_TOKEN:-}
+    volumes:
+      - ${MODELS_DIR:-./models}:/models
+    ipc: host
+    shm_size: ${SHM_SIZE:-64g}
+    ulimits: {memlock: -1, stack: 67108864}
+    deploy: {resources: {reservations: {devices: [{driver: nvidia, count: all, capabilities: [gpu]}]}}}
+    healthcheck: {test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"], interval: 30s, timeout: 10s, retries: 3, start_period: 180s}

@@ -73,6 +73,15 @@ engines:
     depends_on:
       - python-ml
 
+  - name: ollama
+    path: engines/llm/ollama
+    tag: v0.35.1
+    image: ghcr.io/gpurun/engine/ollama:v0.35.1
+    description: Ollama 0.35.1 GGUF serving with FlashAttention + q8_0 KV cache (long-context default)
+    framework: Ollama
+    version: 0.35.1
+    port: 11434
+
   - name: diffusers-api
     path: engines/diffusers-api
     tag: v1
@@ -510,10 +519,11 @@ products:
     precision: fp8
     context: 1048576
     license: MIT
-    description: "DeepSeek-V4.1 FP8 with MLA + MTP, optimized for low-latency Flash serving (SGLang/vLLM)."
+    description: "DeepSeek-V4.1 FP8 with MLA + MTP, optimized for low-latency Flash serving (SGLang/vLLM/Ollama)."
     engines:
       - sglang
       - vllm
+      - ollama
     tags: [deepseek, v4.1, flash, mla, moe, mtp, fp8, 1m]
     model: deepseek-ai/DeepSeek-V4.1
     served_name: DeepSeek-V4.1-Flash
@@ -522,6 +532,7 @@ products:
     compose:
       sglang: products/deepseek-v4.1-flash/docker-compose.sglang.yaml
       vllm: products/deepseek-v4.1-flash/docker-compose.vllm.yaml
+      ollama: products/deepseek-v4.1-flash/docker-compose.ollama.yaml
     env_example: products/deepseek-v4.1-flash/.env.example
 
   - id: glm-5.3-flash
@@ -535,10 +546,11 @@ products:
     precision: fp8
     context: 1048576
     license: MIT
-    description: "GLM-5.3-Flash FP8 with hybrid KDA+DSA attention, optimized for low-latency serving (SGLang/vLLM)."
+    description: "GLM-5.3-Flash FP8 with hybrid KDA+DSA attention, optimized for low-latency serving (SGLang/vLLM/Ollama)."
     engines:
       - sglang
       - vllm
+      - ollama
     tags: [glm, glm5, flash, kda, dsa, hybrid, moe, fp8, 1m]
     model: zai-org/GLM-5.3-Flash
     served_name: GLM-5.3-Flash
@@ -547,6 +559,7 @@ products:
     compose:
       sglang: products/glm-5.3-flash/docker-compose.sglang.yaml
       vllm: products/glm-5.3-flash/docker-compose.vllm.yaml
+      ollama: products/glm-5.3-flash/docker-compose.ollama.yaml
     env_example: products/glm-5.3-flash/.env.example
 
   - id: glm-5.3
@@ -560,10 +573,11 @@ products:
     precision: fp8
     context: 1048576
     license: MIT
-    description: "GLM-5.3 FP8 MoE model with hybrid attention, designed for agentic/long-context workloads (SGLang/vLLM)."
+    description: "GLM-5.3 FP8 MoE model with hybrid attention, designed for agentic/long-context workloads (SGLang/vLLM/Ollama)."
     engines:
       - sglang
       - vllm
+      - ollama
     tags: [glm, glm5, moe, hybrid, fp8, 744b]
     model: zai-org/GLM-5.3
     served_name: GLM-5.3
@@ -572,6 +586,7 @@ products:
     compose:
       sglang: products/glm-5.3/docker-compose.sglang.yaml
       vllm: products/glm-5.3/docker-compose.vllm.yaml
+      ollama: products/glm-5.3/docker-compose.ollama.yaml
     env_example: products/glm-5.3/.env.example
 
   - id: qwen3-8-27b
@@ -585,10 +600,11 @@ products:
     precision: fp8
     context: 131072
     license: Apache-2.0
-    description: "Qwen3 family 8B/14B/32B serving template with SGLang/vLLM, configurable via MODEL_PATH/TP_SIZE."
+    description: "Qwen3 family 8B/14B/32B serving template with SGLang/vLLM/Ollama, configurable via MODEL_PATH/TP_SIZE."
     engines:
       - sglang
       - vllm
+      - ollama
     tags: [qwen, qwen3, 8b, 14b, 32b, reasoning, fp8]
     model: Qwen/Qwen3-8B
     served_name: Qwen3-8B
@@ -597,6 +613,7 @@ products:
     compose:
       sglang: products/qwen3-8-27b/docker-compose.sglang.yaml
       vllm: products/qwen3-8-27b/docker-compose.vllm.yaml
+      ollama: products/qwen3-8-27b/docker-compose.ollama.yaml
     env_example: products/qwen3-8-27b/.env.example
 
   - id: qwen3.8-flash-next
@@ -610,10 +627,11 @@ products:
     precision: fp8
     context: 131072
     license: Apache-2.0
-    description: "Qwen3.8-Flash-Next serving template with SGLang/vLLM (aligned with project standards)."
+    description: "Qwen3.8-Flash-Next serving template with SGLang/vLLM/Ollama (aligned with project standards)."
     engines:
       - sglang
       - vllm
+      - ollama
     tags: [qwen, qwen3, flash-next, fp8, 8b]
     model: Qwen/Qwen3.8-Flash-Next
     served_name: Qwen3.8-Flash-Next
@@ -622,4 +640,5 @@ products:
     compose:
       sglang: products/qwen3.8-flash-next/docker-compose.sglang.yaml
       vllm: products/qwen3.8-flash-next/docker-compose.vllm.yaml
+      ollama: products/qwen3.8-flash-next/docker-compose.ollama.yaml
     env_example: products/qwen3.8-flash-next/.env.example

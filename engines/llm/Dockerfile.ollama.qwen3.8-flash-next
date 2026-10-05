@@ -1,0 +1,20 @@
+# syntax=docker/dockerfile:1
+# Ollama serving image for Qwen3.8-Flash-Next (GGUF, long-context tuned)
+ARG OLLAMA_VERSION=0.35.1
+FROM ollama/ollama:${OLLAMA_VERSION}
+ENV OLLAMA_HOST=0.0.0.0:11434 \
+    OLLAMA_MODELS=/models/ollama \
+    OLLAMA_FLASH_ATTENTION=1 \
+    OLLAMA_KV_CACHE_TYPE=q8_0 \
+    OLLAMA_CONTEXT_LENGTH=131072 \
+    OLLAMA_NUM_PARALLEL=4 \
+    OLLAMA_MAX_LOADED_MODELS=1 \
+    OLLAMA_KEEP_ALIVE=-1 \
+    OLLAMA_MODEL=qwen3.8-flash-next \
+    OLLAMA_PULL=
+COPY ollama/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+EXPOSE 11434
+WORKDIR /workspace
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["serve"]

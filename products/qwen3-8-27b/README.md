@@ -80,6 +80,20 @@ docker compose -f docker-compose.sglang.yaml up -d --build
 docker compose -f docker-compose.vllm.yaml up -d --build
 ```
 
+### Ollama（Docker Compose，GGUF 长上下文）
+
+```bash
+# 默认：FlashAttention + q8_0 KV Cache + 128K 上下文 + 模型常驻
+docker compose -f docker-compose.ollama.yaml up -d --build
+```
+
+默认拉取 `qwen3:8b`（模板默认 8B）；切换 14B/32B 时在 `.env` 同步修改 `OLLAMA_MODEL` 与 `OLLAMA_PULL`（如 `qwen3:14b`、`qwen3:32b`，或 `hf.co/unsloth/Qwen3-8B-GGUF` 等）：
+
+```bash
+OLLAMA_PULL=qwen3:8b AUTO_DOWNLOAD_WEIGHTS=1 \
+  docker compose -f docker-compose.ollama.yaml run --rm qwen3-8-27b-ollama download
+```
+
 ## 6. 验证
 
 ```bash
@@ -87,6 +101,9 @@ docker compose -f docker-compose.vllm.yaml up -d --build
 curl http://127.0.0.1:30000/v1/models
 # vLLM（端口 8000）
 curl http://127.0.0.1:8000/v1/models
+# Ollama（端口 11434）
+curl http://127.0.0.1:11434/api/version
+curl http://127.0.0.1:11434/v1/models
 ```
 
 ## 7. 使用提示
@@ -95,3 +112,4 @@ curl http://127.0.0.1:8000/v1/models
 - 多卡 14B/32B：按实际卡数设置 `TP_SIZE`（常用 2、4）
 - 上下文：131072 已适配模板，超长需结合显存微调 `max-num-seqs`、`max-prefill-tokens`
 - 推理后端：SGLang 默认启用 `deep_gemm`（如可用），vLLM 使用 `FLASH_ATTN`
+- Ollama：改 `.env` 中 `OLLAMA_MODEL`/`OLLAMA_PULL` 即可切换 8B/14B/32B GGUF；`q8_0` KV Cache 下 131072 上下文显存开销约为 fp8 KV 的 1.5～2 倍（`OLLAMA_KV_CACHE_TYPE` 可按卡型调整）

@@ -76,6 +76,20 @@ docker compose -f docker-compose.sglang.yaml up -d --build
 docker compose -f docker-compose.vllm.yaml up -d --build
 ```
 
+### Ollama（Docker Compose，GGUF 长上下文）
+
+```bash
+# 默认：FlashAttention + q8_0 KV Cache + 128K 上下文 + 模型常驻
+docker compose -f docker-compose.ollama.yaml up -d --build
+```
+
+首次拉取权重（官方库仅 `glm-5.3:cloud` 云端标签；本地推荐 HF GGUF）：
+
+```bash
+OLLAMA_PULL=hf.co/unsloth/GLM-5.3-GGUF:UD-Q4_K_XL AUTO_DOWNLOAD_WEIGHTS=1 \
+  docker compose -f docker-compose.ollama.yaml run --rm glm-5-3-ollama download
+```
+
 ## 6. 验证
 
 ```bash
@@ -83,6 +97,9 @@ docker compose -f docker-compose.vllm.yaml up -d --build
 curl http://127.0.0.1:30000/v1/models
 # vLLM（端口 8000）
 curl http://127.0.0.1:8000/v1/models
+# Ollama（端口 11434）
+curl http://127.0.0.1:11434/api/version
+curl http://127.0.0.1:11434/v1/models
 ```
 
 ## 7. 注意事项
@@ -90,3 +107,4 @@ curl http://127.0.0.1:8000/v1/models
 - 744B FP8：显存与带宽要求较高，推荐 8×141GB 以上配置
 - EP 必须开启：MoE 规模较大，建议 `TP8 + EP8`
 - 长上下文：1M 场景需降低并发、限制 `max-prefill-tokens`，避免 Prefill OOM
+- Ollama：GGUF 量化 + `q8_0` KV Cache，默认 128K 上下文可上调至 1M（`OLLAMA_CONTEXT_LENGTH`）；`ollama create` 导入 GGUF 首次约需 2 倍权重磁盘；高并发生产仍推荐 SGLang/vLLM

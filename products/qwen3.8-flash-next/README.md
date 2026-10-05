@@ -79,6 +79,21 @@ docker compose -f docker-compose.sglang.yaml up -d --build
 docker compose -f docker-compose.vllm.yaml up -d --build
 ```
 
+### Ollama（Docker Compose，GGUF 长上下文）
+
+```bash
+# 默认：FlashAttention + q8_0 KV Cache + 128K 上下文 + 模型常驻
+docker compose -f docker-compose.ollama.yaml up -d --build
+```
+
+首次拉取权重（官方库有 125B-A6B 本地标签，按显存选择量化；也可用 HF GGUF）：
+
+```bash
+# 约 120GB (q4_K_M)，256K 窗口；显存不足换更小量化或 hf.co/unsloth/Qwen3.8-Flash-Next-GGUF
+OLLAMA_PULL=qwen3.8-flash-next:125b-a6b-q4_K_M AUTO_DOWNLOAD_WEIGHTS=1 \
+  docker compose -f docker-compose.ollama.yaml run --rm qwen3.8-flash-next-ollama download
+```
+
 ## 6. 验证
 
 ```bash
@@ -86,6 +101,9 @@ docker compose -f docker-compose.vllm.yaml up -d --build
 curl http://127.0.0.1:30000/v1/models
 # vLLM（端口 8000）
 curl http://127.0.0.1:8000/v1/models
+# Ollama（端口 11434）
+curl http://127.0.0.1:11434/api/version
+curl http://127.0.0.1:11434/v1/models
 ```
 
 ## 7. 注意事项
@@ -93,3 +111,4 @@ curl http://127.0.0.1:8000/v1/models
 - 单卡首选：8B Flash-Next 模型单卡（24GB+）即可高效运行，默认 `TP_SIZE=1`
 - KV Cache：默认模板使用 `fp8_e4m3` KV Cache（若显存极为紧张可按需改为 `auto`/`bf16` 并实测）
 - 推理后端：SGLang 启用 `deep_gemm`，vLLM 使用 `FLASH_ATTN`，均适配 8B 场景
+- Ollama：官方 `qwen3.8-flash-next` 库标签为 125B-A6B GGUF（q4 ≈ 120GB，窗口 256K），非 8B BF16；`OLLAMA_CONTEXT_LENGTH` 默认 131072，可上调至 262144

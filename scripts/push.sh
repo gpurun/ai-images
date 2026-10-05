@@ -111,6 +111,9 @@ push_single() {
     engines/llm/sglang)
       push_image "engine" "sglang" "v${SGLANG_VERSION}"
       ;;
+    engines/llm/ollama)
+      push_image "engine" "ollama" "v${OLLAMA_VERSION}"
+      ;;
     engines/vdn-serve)
       push_image "engine" "vdn-serve" "${ENGINE_VDN_SERVE_TAG}"
       ;;
