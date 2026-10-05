@@ -1,0 +1,15 @@
+name: glm-5-3-sglang
+services:
+  glm-5-3-sglang:
+    build: {context: ../.., dockerfile: products/glm-5.3/Dockerfile, args: {ENGINE: sglang, TAG: latest}}
+    image: ai-images/glm-5.3:sglang-latest
+    container_name: glm-5-3-sglang
+    restart: unless-stopped
+    ports: ["${SGLANG_PORT:-30000}:30000"]
+    environment: [HF_TOKEN=${HF_TOKEN}, HF_HOME=/root/.cache/huggingface, TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers]
+    volumes: ["${HF_CACHE_DIR:-~/.cache/huggingface}:/root/.cache/huggingface"]
+    ipc: host
+    shm_size: ${SHM_SIZE:-128g}
+    ulimits: {memlock: -1, stack: 67108864}
+    deploy: {resources: {reservations: {devices: [{driver: nvidia, count: all, capabilities: [gpu]}]}}}
+    command: [--model-path, ${MODEL_PATH:-zai-org/GLM-5.3}, --served-model-name, ${SERVED_MODEL_NAME:-GLM-5.3}, --host, ${HOST:-0.0.0.0}, --port, "30000", --tp-size, "${TP_SIZE:-8}", --ep-size, "${EP_SIZE:-8}", --context-length, "${CONTEXT_LENGTH:-1048576}", --max-running-requests, "${MAX_RUNNING_REQUESTS:-64}", --max-prefill-tokens, "${MAX_PREFILL_TOKENS:-65536}", --chunked-prefill-size, "${CHUNKED_PREFILL_SIZE:-4096}", --mem-fraction-static, "${MEM_FRACTION_STATIC:-0.90}", --dsa-prefill-backend, "${SGLANG_DSA_PREFILL_BACKEND:-trtllm}", --dsa-decode-backend, "${SGLANG_DSA_DECODE_BACKEND:-trtllm}", --moe-runner-backend, "${SGLANG_MOE_RUNNER_BACKEND:-deep_gemm}", --kv-cache-dtype, "${KV_CACHE_DTYPE:-fp8_e4m3}", --reasoning-parser, ${REASONING_PARSER:-glm45}, --tool-call-parser, ${TOOL_CALL_PARSER:-glm47}, --enable-metrics, ${DISABLE_LOG_REQUESTS:+--disable-log-requests}, --log-level, ${LOG_LEVEL:-info}]

@@ -1,0 +1,70 @@
+name: deepseek-v4-1-flash-vllm
+
+services:
+  deepseek-v4-1-flash-vllm:
+    build:
+      context: ../..
+      dockerfile: products/deepseek-v4.1-flash/Dockerfile
+      args:
+        ENGINE: vllm
+        TAG: latest
+    image: ai-images/deepseek-v4-1-flash:vllm-latest
+    container_name: deepseek-v4-1-flash-vllm
+    restart: unless-stopped
+    ports:
+      - "${VLLM_PORT:-8000}:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - HF_HOME=/root/.cache/huggingface
+      - TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers
+      - VLLM_USE_V1=1
+    volumes:
+      - ${HF_CACHE_DIR:-~/.cache/huggingface}:/root/.cache/huggingface
+    ipc: host
+    shm_size: ${SHM_SIZE:-128g}
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command:
+      - ${MODEL_PATH:-deepseek-ai/DeepSeek-V4.1}
+      - --served-model-name
+      - ${SERVED_MODEL_NAME:-DeepSeek-V4.1-Flash}
+      - --host
+      - ${HOST:-0.0.0.0}
+      - --port
+      - "8000"
+      - --trust-remote-code
+      - --tensor-parallel-size
+      - "${TP_SIZE:-8}"
+      - --enable-expert-parallel
+      - --gpu-memory-utilization
+      - "${GPU_MEMORY_UTILIZATION:-0.90}"
+      - --max-model-len
+      - "${CONTEXT_LENGTH:-1048576}"
+      - --max-num-seqs
+      - "${MAX_NUM_SEQS:-64}"
+      - --max-num-batched-tokens
+      - "${MAX_NUM_BATCHED_TOKENS:-65536}"
+      - --block-size
+      - "${BLOCK_SIZE:-128}"
+      - --kv-cache-dtype
+      - "${KV_CACHE_DTYPE:-fp8_e4m3}"
+      - --attention-backend
+      - "${VLLM_ATTENTION_BACKEND:-FLASH_ATTN_MLA}"
+      - --reasoning-parser
+      - ${REASONING_PARSER:-deepseek_v3}
+      - --enable-auto-tool-choice
+      - --tool-call-parser
+      - ${TOOL_CALL_PARSER:-deepseek_v3}
+      - ${ENABLE_MTP:+--speculative-config}
+      - ${ENABLE_MTP:+"{\"method\":\"mtp\",\"num_speculative_tokens\":${MTP_NUM_SPECULATIVE_TOKENS:-2}}"}
+      - --compilation-config
+      - "{\"cudagraph_mode\":\"${VLLM_CUDAGRAPH_MODE:-PIECEWISE}\"}"
+      - ${DISABLE_LOG_REQUESTS:+--disable-log-requests}

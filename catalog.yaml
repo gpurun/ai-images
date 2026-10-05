@@ -498,3 +498,78 @@ products:
       paper: https://arxiv.org/abs/2609.20744
       blog: https://openvdn.github.io/
       license: MiniMax H3 Community License Agreement
+
+  - id: deepseek-v4.1-flash
+    name: DeepSeek-V4.1-Flash
+    vendor: deepseek-ai
+    family: deepseek-v4.1
+    variant: flash
+    arch: MoE+MLA
+    params: 671B
+    active_params: 37B
+    precision: fp8
+    context: 1048576
+    license: MIT
+    description: "DeepSeek-V4.1 FP8 with MLA + MTP, optimized for low-latency Flash serving (SGLang/vLLM)."
+    engines:
+      - sglang
+      - vllm
+    tags: [deepseek, v4.1, flash, mla, moe, mtp, fp8, 1m]
+    model: deepseek-ai/DeepSeek-V4.1
+    served_name: DeepSeek-V4.1-Flash
+    products_dir: products/deepseek-v4.1-flash
+    readme: products/deepseek-v4.1-flash/README.md
+    compose:
+      sglang: products/deepseek-v4.1-flash/docker-compose.sglang.yaml
+      vllm: products/deepseek-v4.1-flash/docker-compose.vllm.yaml
+    env_example: products/deepseek-v4.1-flash/.env.example
+
+  - id: glm-5.3-flash
+    name: GLM-5.3-Flash
+    vendor: zai-org
+    family: glm-5
+    variant: flash
+    arch: MoE+Hybrid-KDA-DSA
+    params: 320B
+    active_params: 18B
+    precision: fp8
+    context: 1048576
+    license: MIT
+    description: "GLM-5.3-Flash FP8 with hybrid KDA+DSA attention, optimized for low-latency serving (SGLang/vLLM)."
+    engines:
+      - sglang
+      - vllm
+    tags: [glm, glm5, flash, kda, dsa, hybrid, moe, fp8, 1m]
+    model: zai-org/GLM-5.3-Flash
+    served_name: GLM-5.3-Flash
+    products_dir: products/glm-5.3-flash
+    readme: products/glm-5.3-flash/README.md
+    compose:
+      sglang: products/glm-5.3-flash/docker-compose.sglang.yaml
+      vllm: products/glm-5.3-flash/docker-compose.vllm.yaml
+    env_example: products/glm-5.3-flash/.env.example
+
+  - id: glm-5.3
+    name: GLM-5.3
+    vendor: zai-org
+    family: glm-5
+    variant: standard
+    arch: MoE+Hybrid
+    params: 744B
+    active_params: 40B
+    precision: fp8
+    context: 1048576
+    license: MIT
+    description: "GLM-5.3 FP8 MoE model with hybrid attention, designed for agentic/long-context workloads (SGLang/vLLM)."
+    engines:
+      - sglang
+      - vllm
+    tags: [glm, glm5, moe, hybrid, fp8, 744b]
+    model: zai-org/GLM-5.3
+    served_name: GLM-5.3
+    products_dir: products/glm-5.3
+    readme: products/glm-5.3/README.md
+    compose:
+      sglang: products/glm-5.3/docker-compose.sglang.yaml
+      vllm: products/glm-5.3/docker-compose.vllm.yaml
+    env_example: products/glm-5.3/.env.example
