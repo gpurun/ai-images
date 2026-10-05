@@ -82,6 +82,34 @@ export IMAGE_REGISTRY=ghcr.io/gpurun
 - `engine/comfyui:v0.37.0`
 - `product/video-minimax-h3-singularity:v1`
 
+## 🖥️ GPU 卡型、数量与环境要求汇总
+
+> 详细要求请参见各产品目录下的 `README.md`。以下为部署时的推荐参考。
+
+| 产品 | 模型 | 参数 | 精度 | 推荐 GPU（数量） | 数据盘（模型缓存） | SHM | 说明 |
+|---|---|---|---|---|---|---|---|
+| `products/deepseek-v4.1-flash` | `deepseek-ai/DeepSeek-V4.1` | 671B（37B 激活） | FP8 | **H200 141GB ×8**（或 B200/GB200 ×8；H100 80GB ×8 可用） | >= 400 GB | 128 GB | 必须 TP8+EP8，支持 512K–1M 上下文 |
+| `products/glm-5.3-flash` | `zai-org/GLM-5.3-Flash` | 320B（18B 激活） | FP8 | **H200/H100 80GB+ ×4**（或 B200 ×4） | >= 350 GB | 64–128 GB | KDA+DSA 混合注意力，支持 1M 上下文 |
+| `products/glm-5.3` | `zai-org/GLM-5.3` | 744B（40B 激活） | FP8 | **H200 141GB ×8**（或 B200/GB200 ×8） | >= 600 GB | 128 GB | 大规模 MoE，推荐 8×141GB 以上 |
+| `products/qwen3-8-27b`（模板） | `Qwen/Qwen3-8B/14B/32B` | 8–32B | FP8/W4A16 | **8B：1×24GB+；14B：1×48GB+；32B：2×80GB（或 4 卡）** | 20–70 GB | 32–64 GB | 模板化，按 `MODEL_PATH`、`TP_SIZE` 配置 |
+| `products/qwen3.8-flash-next` | `Qwen/Qwen3.8-Flash-Next` | 8B | FP8 | **1×24GB+（推荐 32GB）** | >= 20 GB | 32–64 GB | 轻量高效，单卡首选 |
+| `products/video-minimax-h3-singularity` | MiniMax H3（ComfyUI） | 视频生成工作流 | – | **1×24GB+（推荐 32GB；生产建议 A100-80GB/H100）** | >= 80 GB | 16–32 GB | 显存随分辨率/帧数动态变化 |
+
+### 通用环境要求
+
+| 项目 | 要求 |
+|---|---|
+| 操作系统 | Ubuntu 22.04 LTS / 24.04 LTS |
+| NVIDIA 驱动 | >= 535.129.03（强烈推荐 >= 550.xx） |
+| CUDA | 12.8.x（镜像基于 `nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04`） |
+| Docker | >= 24.0 |
+| NVIDIA Container Toolkit | >= 1.15.0 |
+| CPU | 8–32 核（超大模型建议 32 核+） |
+| 内存（RAM） | 32–256 GB（按对应模型选择） |
+| 网络 | 稳定（首次下载模型需高速网络） |
+
+各产品详细说明：[deepseek-v4.1-flash](products/deepseek-v4.1-flash/README.md) · [glm-5.3-flash](products/glm-5.3-flash/README.md) · [glm-5.3](products/glm-5.3/README.md) · [qwen3-8-27b](products/qwen3-8-27b/README.md) · [qwen3.8-flash-next](products/qwen3.8-flash-next/README.md) · [video-minimax-h3-singularity](products/video-minimax-h3-singularity/README.md)
+
 ## 🎬 产品镜像：MiniMax H3 Singularity
 
 第一个发布的产品镜像，基于 ComfyUI 的 MiniMax-H3 视频生成。

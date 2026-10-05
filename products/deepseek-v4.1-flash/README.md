@@ -15,19 +15,43 @@
 | MTP | 原生支持 Multi-Token Prediction（可选开启） |
 | License | MIT |
 
-## 2. 硬件要求
+## 2. GPU 卡型、数量及硬件要求
 
 FP8 权重约 `340 ~ 350 GiB`。
 
-| GPU | 推荐 TP/EP | KV Cache Dtype |
-|---|---|---|
-| GB200/B200 (SM100) | TP=8, EP=8 | fp8_e4m3 |
-| H200 (SM90, 141GB) | TP=8, EP=8 | fp8_e4m3 |
-| H100 (SM90, 80GB) | TP=8, EP=8 | fp8_e4m3 |
+### 推荐配置
+
+| GPU 型号 | 架构 | 显存（单卡） | 推荐数量 | 并行方式 | KV Cache Dtype | 备注 |
+|---|---|---|---|---|---|---|
+| NVIDIA GB200 / B200 | SM100 | 180GB | **8 卡** | TP=8, EP=8 | fp8_e4m3 | 最佳性能，适合 512K–1M 长上下文 |
+| NVIDIA H200 | SM90 | 141GB | **8 卡** | TP=8, EP=8 | fp8_e4m3 | 主流生产推荐配置 |
+| NVIDIA H100 | SM90 | 80GB | **8 卡** | TP=8, EP=8 | fp8_e4m3 | 可稳定跑 256K–512K，1M 需收紧批次与并发 |
 
 推荐：`8× H200 141GB`（TP8 + EP8）+ FP8 KV Cache。
 
-## 3. 快速开始
+### 系统硬件要求
+
+| 项目 | 要求 | 说明 |
+|---|---|---|
+| CPU | 16 核以上（推荐 32 核+） | 长上下文 Prefill 对 CPU 有开销 |
+| 内存（RAM） | >= 128 GB（推荐 256 GB） | 预加载模型与请求队列 |
+| 系统盘 | >= 100 GB（可用） | 容器镜像、日志 |
+| 数据盘（模型缓存） | >= 400 GB（可用） | HuggingFace 缓存约 340–350GB |
+| 共享内存（SHM） | >= 128 GB | `--shm-size=128g` |
+| PCIe/NVLink | PCIe 5.0 x16 或 NVLink/InfiniBand | 跨卡通信 |
+
+## 3. 环境要求
+
+| 项目 | 推荐版本 | 说明 |
+|---|---|---|
+| 操作系统 | Ubuntu 22.04 LTS / 24.04 LTS | 经生产环境验证较多 |
+| NVIDIA 驱动 | >= 535.129.03（推荐 >= 550.xx） | 支持 CUDA 12.8 及 FP8 KV Cache |
+| CUDA | 12.8.x | 基于 `nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04` 构建 |
+| Docker | >= 24.0 | 推荐最新版 |
+| NVIDIA Container Toolkit | >= 1.15.0 | GPU 透传 |
+| 网络 | 稳定（高速） | 首次下载模型约 350GB |
+
+## 4. 快速开始
 
 ```bash
 cd products/deepseek-v4.1-flash
@@ -43,7 +67,7 @@ huggingface-cli download deepseek-ai/DeepSeek-V4.1 \
   --local-dir-use-symlinks False
 ```
 
-## 4. 启动
+## 5. 启动
 
 ### SGLang（Docker Compose）
 
@@ -57,7 +81,7 @@ docker compose -f docker-compose.sglang.yaml up -d --build
 docker compose -f docker-compose.vllm.yaml up -d --build
 ```
 
-## 5. 验证
+## 6. 验证
 
 ```bash
 # SGLang
@@ -67,7 +91,7 @@ curl http://127.0.0.1:30000/v1/models
 curl http://127.0.0.1:8000/v1/models
 ```
 
-## 6. 注意事项
+## 7. 注意事项
 
 - 671B MoE 必须开启 EP（TP8+EP8 推荐）
 - SGLang 推荐 `flashmla` + `deep_gemm`；vLLM 推荐 `FLASH_ATTN_MLA` + `PIECEWISE` CUDA Graphs
