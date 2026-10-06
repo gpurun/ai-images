@@ -99,6 +99,8 @@ export IMAGE_REGISTRY=ghcr.io/gpurun
 | `products/glm-5.3` | `zai-org/GLM-5.3` | 744B（40B 激活） | FP8 | **H200 141GB ×8**（或 B200/GB200 ×8） | >= 600 GB | 128 GB | 大规模 MoE，推荐 8×141GB 以上 |
 | `products/qwen3-8-27b`（模板） | `Qwen/Qwen3-8B/14B/32B` | 8–32B | FP8/W4A16 | **8B：1×24GB+；14B：1×48GB+；32B：2×80GB（或 4 卡）** | 20–70 GB | 32–64 GB | 模板化，按 `MODEL_PATH`、`TP_SIZE` 配置 |
 | `products/qwen3.8-flash-next` | `Qwen/Qwen3.8-Flash-Next` | 8B | FP8 | **1×24GB+（推荐 32GB）** | >= 20 GB | 32–64 GB | 轻量高效，单卡首选 |
+| `products/jev-9b` | `autotrust/JEV-9B` | 9B | BF16 | **1×RTX 4090 24GB（TP=1）** | >= 45 GB | 64 GB | System 1 + System 2 决策模型（文本+视觉），vLLM `POST /v1/decide`，`max-num-seqs=8` 硬约束 |
+| `products/jev-27b-vl` | `autotrust/JEV-27B-VL` | 28B | BF16 | **2 卡：单卡 >= 48GB（TP=2）；4 卡：单卡 >= 24GB（TP=4，如 4×4090）** | >= 70 GB | 64 GB | System 1（2–256 选项，文本+图像）+ System 2；256K 上下文需约 17GB KV |
 | `products/video-minimax-h3-singularity` | MiniMax H3（ComfyUI） | 视频生成工作流 | – | **1×24GB+（推荐 32GB；生产建议 A100-80GB/H100）** | >= 80 GB | 16–32 GB | 显存随分辨率/帧数动态变化 |
 | `products/video-vdn-minimax-h3` | OpenVDN VDN-H3（SGLang Diffusion / Diffusers） | 视频生成 | FP8/BF16 | **最低 1×24GB（RTX 4090）；推荐 1×32GB+（H200/A100-80GB/RTX 5090）；生产 2/4/8×B200（NUM_GPUS）** | >= 100 GB | 32–64 GB | 双模式推理，8×B200 最快（6.9s/8步） |
 | `products/image-qwen-image-21-*`（6 SKU） | `Qwen/Qwen-Image-2.1` | 扩散模型（T2I/编辑） | FP16/FP8/BF16/GGUF | **均单卡**：4090-24g→1×RTX 4090 24GB；5090→1×RTX 5090 32GB；48g→1×A100/H100 80GB（48GB+） | >= 40–60 GB | 16–32 GB | 2 种运行时（ComfyUI/Diffusers API）× 3 种显存规格 |
@@ -116,7 +118,7 @@ export IMAGE_REGISTRY=ghcr.io/gpurun
 | 内存（RAM） | 32–256 GB（按对应模型选择） |
 | 网络 | 稳定（首次下载模型需高速网络） |
 
-各产品详细说明：[deepseek-v4.1-flash](products/deepseek-v4.1-flash/README.md) · [glm-5.3-flash](products/glm-5.3-flash/README.md) · [glm-5.3/](products/glm-5.3/README.md) · [qwen3-8-27b](products/qwen3-8-27b/README.md) · [qwen3.8-flash-next](products/qwen3.8-flash-next/README.md) · [video-minimax-h3-singularity](products/video-minimax-h3-singularity/README.md) · [video-vdn-minimax-h3](products/video-vdn-minimax-h3/README.md) · [Qwen-Image-2.1 共享文档](products/_qwen-image-21-shared/README.md)
+各产品详细说明：[deepseek-v4.1-flash](products/deepseek-v4.1-flash/README.md) · [glm-5.3-flash](products/glm-5.3-flash/README.md) · [glm-5.3/](products/glm-5.3/README.md) · [qwen3-8-27b](products/qwen3-8-27b/README.md) · [qwen3.8-flash-next](products/qwen3.8-flash-next/README.md) · [jev-9b](products/jev-9b/README.md) · [jev-27b-vl](products/jev-27b-vl/README.md) · [video-minimax-h3-singularity](products/video-minimax-h3-singularity/README.md) · [video-vdn-minimax-h3](products/video-vdn-minimax-h3/README.md) · [Qwen-Image-2.1 共享文档](products/_qwen-image-21-shared/README.md)
 
 ### 基础/引擎层镜像要求
 

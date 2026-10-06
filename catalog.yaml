@@ -642,3 +642,65 @@ products:
       vllm: products/qwen3.8-flash-next/docker-compose.vllm.yaml
       ollama: products/qwen3.8-flash-next/docker-compose.ollama.yaml
     env_example: products/qwen3.8-flash-next/.env.example
+
+  - id: jev-9b
+    name: JEV-9B
+    vendor: autotrust
+    family: jev
+    variant: 9b
+    arch: Qwen3.5-9B + System-1-LoRA
+    params: 9B
+    active_params: 9B
+    precision: bf16
+    context: 8192
+    license: Apache-2.0
+    description: "JEV-9B System 1 + System 2 decision model (Qwen3.5-9B backbone, text + vision), single-GPU RTX 4090 serving via vLLM with POST /v1/decide."
+    engines:
+      - vllm
+    tags: [jev, decision, system1, system2, qwen3.5, vision, 4090, bf16]
+    model: autotrust/JEV-9B
+    served_name: autotrust/JEV-9B
+    products_dir: products/jev-9b
+    readme: products/jev-9b/README.md
+    compose:
+      vllm: products/jev-9b/docker-compose.vllm.yaml
+      vllm_vl: products/jev-9b/docker-compose.vllm-vl.yaml
+    env_example: products/jev-9b/.env.example
+    resources:
+      gpu: required
+      vram_min_gb: 24
+      recommended:
+        gpu: NVIDIA RTX 4090
+        vram_gb: 24
+        multi_gpu: 1
+
+  - id: jev-27b-vl
+    name: JEV-27B-VL
+    vendor: autotrust
+    family: jev
+    variant: 27b-vl
+    arch: Qwen3.8-27B + System-1-LoRA
+    params: 28B
+    active_params: 28B
+    precision: bf16
+    context: 262144
+    license: Apache-2.0
+    description: "JEV-27B-VL System 1 (2-256 options, text + images) + System 2 on one vLLM engine; 2-GPU TP=2 (48GB+ per GPU) or 4-GPU TP=4 (24GB+ per GPU, e.g. RTX 4090)."
+    engines:
+      - vllm
+    tags: [jev, decision, system1, system2, qwen3.8, vision, vl, 256-options, 2gpu, 4gpu, bf16]
+    model: autotrust/JEV-27B-VL
+    served_name: autotrust/JEV-27B-VL
+    products_dir: products/jev-27b-vl
+    readme: products/jev-27b-vl/README.md
+    compose:
+      vllm_2gpu: products/jev-27b-vl/docker-compose.vllm-2gpu.yaml
+      vllm_4gpu: products/jev-27b-vl/docker-compose.vllm-4gpu.yaml
+    env_example: products/jev-27b-vl/.env.example
+    resources:
+      gpu: required
+      vram_min_gb: 24
+      recommended:
+        gpu: NVIDIA L40S/A6000 48GB x2 or RTX 4090 24GB x4
+        vram_gb: 48
+        multi_gpu: 2

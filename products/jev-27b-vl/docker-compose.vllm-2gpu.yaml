@@ -1,0 +1,63 @@
+name: jev-27b-vl-2gpu
+services:
+  jev-27b-vl-2gpu:
+    build:
+      context: ../..
+      dockerfile: products/jev-27b-vl/Dockerfile
+      args: {ENGINE: vllm, TAG: latest}
+    image: ai-images/jev-27b-vl:vllm-latest
+    container_name: jev-27b-vl-2gpu
+    restart: unless-stopped
+    ports:
+      - "${VLLM_PORT:-8000}:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - HF_HOME=/root/.cache/huggingface
+      - TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers
+      - VLLM_USE_V1=1
+      - JEV_DECIDE_SCRIPT=${JEV_DECIDE_SCRIPT:-}
+    volumes:
+      - "${HF_CACHE_DIR:-~/.cache/huggingface}:/root/.cache/huggingface"
+      - "${MODELS_DIR:-./models}:/models"
+    ipc: host
+    shm_size: ${SHM_SIZE:-64g}
+    ulimits: {memlock: -1, stack: 67108864}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${GPU_ID_0:-0}", "${GPU_ID_1:-1}"]
+              capabilities: [gpu]
+    command:
+      - ${MODEL_PATH:-/models/JEV-27B-VL}
+      - --served-model-name
+      - ${SERVED_MODEL_NAME:-autotrust/JEV-27B-VL}
+      - --host
+      - ${HOST:-0.0.0.0}
+      - --port
+      - "8000"
+      - --tensor-parallel-size
+      - "${TP_SIZE:-2}"
+      - --gpu-memory-utilization
+      - "${GPU_MEMORY_UTILIZATION:-0.90}"
+      - --max-model-len
+      - "${CONTEXT_LENGTH:-32768}"
+      - --max-num-seqs
+      - "${MAX_NUM_SEQS:-8}"
+      - --enable-lora
+      - --max-lora-rank
+      - "${MAX_LORA_RANK:-32}"
+      - --lora-modules
+      - jev-decision=${MODEL_PATH:-/models/JEV-27B-VL}/adapter_vllm
+      - --logprobs-mode
+      - processed_logprobs
+      - --max-logprobs
+      - "${MAX_LOGPROBS:-256}"
+      - --enable-prefix-caching
+      - --mamba-cache-mode
+      - align
+      - --limit-mm-per-prompt
+      - "{\"image\": ${MAX_IMAGES_PER_PROMPT:-8}}"
+      - --trust-request-chat-template
+      - ${DISABLE_LOG_REQUESTS:+--disable-log-requests}

@@ -137,6 +137,30 @@ docker run <image> <cmd>        # 透传自定义命令
 
 **性能/长上下文约定**: 引擎镜像必须以 `OLLAMA_FLASH_ATTENTION=1` + `OLLAMA_KV_CACHE_TYPE=q8_0` 构建默认值；产品 compose 必须持久化 `/models` 并设置 `OLLAMA_KEEP_ALIVE=-1`。
 
+### JEV 决策模型 (vLLM, System 1 + System 2)
+
+基于 `engines/llm/Dockerfile.vllm.jev-*` 的产品必须实现：
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `VLLM_PORT` | `8000` | vLLM API 服务端口（System 1/2 共用） |
+| `MODEL_PATH` | `/models/<model>` | 模型本地目录（`serve_decide.py` 与 `adapter_vllm` 必须为本地文件） |
+| `JEV_DECIDE_SCRIPT` | 自动探测 | `serve_decide.py` 显式路径；留空时按 `<MODEL>/serve_decide.py` → `<MODEL>/vl/serve_decide.py` 探测，未命中则回退普通 `vllm serve` |
+| `TP_SIZE` | 1 / 2 / 4 | 张量并行（按产品：9B=1；27B 2 卡=2、4 卡=4） |
+| `MAX_NUM_SEQS` | `8` | **硬约束**：批内 >8 序列时 System 1 概率错误，禁止改动 |
+| `CONTEXT_LENGTH` | 产品定义 | `--max-model-len`（JEV-9B 8192 / JEV-27B-VL 32768，最高 262144） |
+| `GPU_MEMORY_UTILIZATION` | `0.90` | GPU 显存利用率 |
+| `MAX_LORA_RANK` | `32` | `--max-lora-rank`（决策 LoRA 上限） |
+| `MAX_LOGPROBS` | `256` | `--max-logprobs`（客户端直接读选项 logprobs 的上限） |
+| `MAX_IMAGES_PER_PROMPT` | `8` | `--limit-mm-per-prompt`（视觉产品） |
+| `GPU_ID` / `GPU_ID_0..3` | `0`..`3` | `device_ids` 卡号选择（多卡产品必须可配） |
+
+**端口**: `8000` (OpenAI-compatible API + `POST /v1/decide`)
+
+**必备启动参数**: `--enable-lora --logprobs-mode processed_logprobs --enable-prefix-caching --mamba-cache-mode align --trust-request-chat-template --lora-modules jev-decision=<model>/adapter_vllm`，视觉产品另加 `--limit-mm-per-prompt`；`serve_decide.py` 需要 vLLM 开发版（`logprob_token_ids`）。
+
+**Entrypoint**: 引擎镜像以 `jev-serve` 为 entrypoint，参数形式为 `<model-path> [vllm serve flags...]`（与 `vllm serve` / `serve_decide.py` 同一套 flag）。
+
 ### LLM 健康检查
 ```yaml
 healthcheck:
